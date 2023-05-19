@@ -15,90 +15,135 @@
 .grid > .tile:hover {
   background-color: hsl(215 2% 61%);
 }
+.grid > .tile:active {
+  box-shadow: inset 0 2px hsl(215 2% 54%);
+}
 
 .grid > .tile::after {
   display: inline-block;
   margin-top: 5px;
 }
 
+.grid > .tile:active::after {
+  margin-top: 6px;
+}
+
 .grid > .tile.mine {
   background-color: red;
 }
+.grid > .tile.mine {
+  box-shadow: unset;
+}
 
 .grid > .tile.neighbors-0 {
-  background-color: hsl(215, 2%, 81%);
+  background-color: hsl(215 2% 81%);
 }
 .grid > .tile.neighbors-0:hover {
-  background-color: hsl(215, 2%, 76%);
+  background-color: hsl(215 2% 76%);
 }
+.grid > .tile.tile.neighbors-0:active {
+  box-shadow: unset;
+}
+
 .grid > .tile.neighbors-1 {
   background-color: hsl(75 80% 70%);
 }
 .grid > .tile.neighbors-1:hover {
   background-color: hsl(75 80% 55%);
 }
+.grid > .tile.neighbors-1:active {
+  box-shadow: inset 0 2px hsl(75 80% 40%);
+}
 .grid > .tile.neighbors-1::after {
   content: "1";
 }
+
 .grid > .tile.neighbors-2 {
   background-color: hsl(60 84% 70%);
 }
 .grid > .tile.neighbors-2:hover {
   background-color: hsl(60 86% 54%);
 }
+.grid > .tile.neighbors-2:active {
+  box-shadow: inset 0 2px hsl(60 86% 40%);
+}
 .grid > .tile.neighbors-2::after {
   content: "2";
 }
+
 .grid > .tile.neighbors-3 {
   background-color: hsl(42 85% 65%);
 }
 .grid > .tile.neighbors-3:hover {
   background-color: hsl(42 85% 55%);
 }
+.grid > .tile.neighbors-3:active {
+  box-shadow: inset 0 2px hsl(42 85% 38%);
+}
 .grid > .tile.neighbors-3::after {
   content: "3";
 }
+
 .grid > .tile.neighbors-4 {
   background-color: hsl(36 92% 57%);
 }
 .grid > .tile.neighbors-4:hover {
   background-color: hsl(36 92% 51%);
 }
+.grid > .tile.neighbors-4:active {
+  box-shadow: inset 0 2px hsl(36 92% 38%);
+}
 .grid > .tile.neighbors-4::after {
   content: "4";
 }
+
 .grid > .tile.neighbors-5 {
   background-color: hsl(16 84% 64%);
 }
 .grid > .tile.neighbors-5:hover {
   background-color: hsl(16 84% 58%);
 }
+.grid > .tile.neighbors-5:active {
+  box-shadow: inset 0 2px hsl(16 84% 42%);
+}
 .grid > .tile.neighbors-5::after {
   content: "5";
 }
+
 .grid > .tile.neighbors-6 {
   background-color: hsl(354 87% 64%);
 }
 .grid > .tile.neighbors-6:hover {
-  background-color: hsl(354 87% 58%);
+  background-color: hsl(354 84% 58%);
+}
+.grid > .tile.neighbors-6:active {
+  box-shadow: inset 0 2px hsl(354 84% 42%);
 }
 .grid > .tile.neighbors-6::after {
   content: "6";
 }
+
 .grid > .tile.neighbors-7 {
-  background-color: hsl(306 65% 50%);
+  background-color: hsl(306 65% 54%);
 }
 .grid > .tile.neighbors-7:hover {
-  background-color: hsl(306 65% 40%);
+  background-color: hsl(306 65% 47%);
+}
+.grid > .tile.neighbors-7:active {
+  box-shadow: inset 0 2px hsl(306 65% 32%);
 }
 .grid > .tile.neighbors-7::after {
   content: "7";
 }
+
 .grid > .tile.neighbors-8 {
-  background-color: hsl(250 54% 60%);
+  background-color: hsl(250 54% 64%);
 }
 .grid > .tile.neighbors-8:hover {
-  background-color: hsl(250 54% 52%);
+  background-color: hsl(250 54% 58%);
+}
+.grid > .tile.neighbors-8:active {
+  box-shadow: inset 0 2px hsl(250 54% 40%);
 }
 .grid > .tile.neighbors-8::after {
   content: "8";
