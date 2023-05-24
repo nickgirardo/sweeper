@@ -1,4 +1,4 @@
-import { render } from "preact";
-import { GameAreaContainer } from "./components/GameArea.js";
+import { render, h } from "preact";
+import { App } from "./components/App.js";
 
-render(GameAreaContainer, document.querySelector("#game-area")!);
+render(h(App, null, null), document.querySelector("#game-area")!);

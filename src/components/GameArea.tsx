@@ -7,7 +7,7 @@ import { PregameGrid } from "./PregameGrid.js";
 interface GameAreaProps {
   width: number;
   height: number;
-  mines: number;
+  mineCount: number;
 }
 export const GameArea: FunctionComponent<GameAreaProps> = (props) => {
   const [startingTile, setStartingTile] = useState<number | null>(null);
@@ -24,10 +24,8 @@ export const GameArea: FunctionComponent<GameAreaProps> = (props) => {
     <Grid
       width={props.width}
       height={props.height}
-      mines={props.mines}
+      mineCount={props.mineCount}
       startingTile={startingTile}
     />
   );
 };
-
-export const GameAreaContainer = <GameArea width={30} height={16} mines={99} />;
