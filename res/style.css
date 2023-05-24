@@ -1,3 +1,10 @@
+.setup > button {
+  display: block;
+}
+.setup > button:not(:last-child) {
+  margin-bottom: 0.5em;
+}
+
 .grid {
   display: grid;
   width: min-content;
@@ -37,9 +44,6 @@
 
 .grid > .tile.neighbors-0 {
   background-color: hsl(215 2% 81%);
-}
-.grid > .tile.neighbors-0:hover {
-  background-color: hsl(215 2% 76%);
 }
 .grid > .tile.tile.neighbors-0:active {
   box-shadow: unset;
