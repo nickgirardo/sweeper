@@ -1,7 +1,5 @@
 import { FunctionComponent } from "preact";
-import { useState } from "preact/hooks";
-
-import { assertNever } from "../util.js";
+import { signal } from "@preact/signals";
 
 import { Setup } from "./Setup.js";
 import { Grid } from "./Grid.js";
@@ -39,29 +37,35 @@ type PostGameState = {
 
 type AppState = SetupState | PreGameState | GameState | PostGameState;
 
-export const App: FunctionComponent<{}> = () => {
-  const [state, setState] = useState<AppState>({ stage: Stage.Setup });
+const state = signal<AppState>({ stage: Stage.Setup });
 
-  switch (state.stage) {
+export const App: FunctionComponent<{}> = () => {
+  switch (state.value.stage) {
     case Stage.Setup:
       return (
         <Setup
           completeSetup={(width, height, mineCount) =>
-            setState({ stage: Stage.PreGame, width, height, mineCount })
+            (state.value = {
+              stage: Stage.PreGame,
+              width,
+              height,
+              mineCount,
+            })
           }
         />
       );
     case Stage.PreGame:
+      console.log(state.value);
       return (
         <PregameGrid
-          width={state.width}
-          height={state.height}
+          width={state.value.width}
+          height={state.value.height}
           handleSelectTile={(tile: number) =>
-            setState({
+            (state.value = {
               stage: Stage.Game,
-              width: state.width,
-              height: state.height,
-              mineCount: state.mineCount,
+              width: (state.value as PreGameState).width,
+              height: (state.value as PreGameState).height,
+              mineCount: (state.value as PreGameState).mineCount,
               startingTile: tile,
             })
           }
@@ -70,19 +74,17 @@ export const App: FunctionComponent<{}> = () => {
     case Stage.Game:
       return (
         <Grid
-          width={state.width}
-          height={state.height}
-          mineCount={state.mineCount}
-          startingTile={state.startingTile}
+          width={(state.value as GameState).width}
+          height={(state.value as GameState).height}
+          mineCount={(state.value as GameState).mineCount}
+          startingTile={(state.value as GameState).startingTile}
         />
       );
     case Stage.PostGame:
       return (
-        <button onClick={() => setState({ stage: Stage.Setup })}>
+        <button onClick={() => (state.value = { stage: Stage.Setup })}>
           PostGame
         </button>
       );
-    default:
-      return assertNever(state);
   }
 };

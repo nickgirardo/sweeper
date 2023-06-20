@@ -1,5 +1,5 @@
 import { FunctionComponent } from "preact";
-import { classNames } from "../util.js";
+import { classNames } from "../util/index.js";
 
 interface Props {
   neighbors: number;

@@ -1,6 +1,6 @@
 import { FunctionComponent } from "preact";
 
-import { range } from "../util.js";
+import { range } from "../util/index.js";
 
 interface PregameTileProps {
   onClick: () => void;

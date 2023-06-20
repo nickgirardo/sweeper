@@ -1,11 +1,13 @@
 import { FunctionComponent } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
+import { useSignal, batch } from "@preact/signals";
 
 import {
   range,
   getNeighbors as uGetNeighbors,
-  checkTiles as uCheckTiles,
-} from "../util.js";
+  checkTiles,
+  genBoard,
+} from "../util/index.js";
 
 import { Tile } from "./Tile.js";
 
@@ -17,71 +19,59 @@ interface Props {
 }
 
 export const Grid: FunctionComponent<Props> = (props) => {
+  const mines = useSignal<Array<number>>([]);
+  const neighbors = useSignal<Array<number>>([]);
+  const checkedTiles = useSignal<Array<number>>([]);
+  const flaggedTiles = useSignal<Array<number>>([]);
+
   const getNeighbors = (tile: number) =>
     uGetNeighbors(tile, props.width, props.height);
 
-  const [mines, setMines] = useState<Array<number>>([]);
-  const [neighbors, setNeighbors] = useState<Array<number>>([]);
-  const [checkedTiles, setCheckedTiles] = useState<Array<number>>([]);
-  const [flaggedTiles, setFlaggedTiles] = useState<Array<number>>([]);
-
   // Generate grid
   useEffect(() => {
-    const totalCells = props.width * props.height;
     // Don't generate any mines in the tiles around the starting tile
     const freeTiles = [props.startingTile, ...getNeighbors(props.startingTile)];
 
-    const mines: Array<number> = [];
-    while (mines.length < props.mineCount) {
-      const location = Math.floor(Math.random() * totalCells);
-      if (!freeTiles.includes(location) && !mines.includes(location))
-        mines.push(location);
-    }
+    const [newMines, newNeighbors] = genBoard(
+      props.width,
+      props.height,
+      props.mineCount,
+      freeTiles
+    );
 
-    // Easier for me to reason about, probably not needed
-    mines.sort((a, b) => a - b);
+    batch(() => {
+      mines.value = newMines;
+      neighbors.value = newNeighbors;
 
-    // Calculate neighbors
-    const neighbors = new Array(totalCells).fill(0);
-    for (const mine of mines) {
-      getNeighbors(mine).forEach((tile) => neighbors[tile]++);
-    }
-
-    setMines(mines);
-    setNeighbors(neighbors);
-
-    setCheckedTiles(
-      uCheckTiles(
+      // Start the puzzle with the starting tile checked
+      checkedTiles.value = checkTiles(
         props.startingTile,
         props.width,
         props.height,
         [],
         [],
-        neighbors
-      )
-    );
+        newNeighbors
+      );
+    });
   }, [props.startingTile]);
 
   const checkTile = (tile: number) => {
-    setCheckedTiles(
-      uCheckTiles(
-        tile,
-        props.width,
-        props.height,
-        checkedTiles,
-        flaggedTiles,
-        neighbors
-      )
+    checkedTiles.value = checkTiles(
+      tile,
+      props.width,
+      props.height,
+      checkedTiles.value,
+      flaggedTiles.value,
+      neighbors.value
     );
   };
 
   const flagTile = (tile: number) => {
-    if (checkedTiles.includes(tile)) return;
+    if (checkedTiles.value.includes(tile)) return;
 
-    setFlaggedTiles((prev: Array<number>) => {
-      if (prev.includes(tile)) return prev.filter((id: number) => id !== tile);
-      return [tile, ...prev];
-    });
+    flaggedTiles.value = flaggedTiles.value.includes(tile)
+      ? flaggedTiles.value.filter((id: number) => id !== tile)
+      : [tile, ...flaggedTiles.value];
   };
 
   return (
@@ -91,10 +81,10 @@ export const Grid: FunctionComponent<Props> = (props) => {
     >
       {range(props.width * props.height).map((n) => (
         <Tile
-          neighbors={neighbors[n]}
-          isChecked={checkedTiles.includes(n)}
-          isMine={mines.includes(n)}
-          isFlagged={flaggedTiles.includes(n)}
+          neighbors={neighbors.value[n]}
+          isChecked={checkedTiles.value.includes(n)}
+          isMine={mines.value.includes(n)}
+          isFlagged={flaggedTiles.value.includes(n)}
           handleCheck={() => checkTile(n)}
           handleFlag={() => flagTile(n)}
         />
