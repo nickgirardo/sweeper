@@ -1,6 +1,6 @@
 import satSolve from "boolean-sat";
 
-import { SolutionStep, Solver } from "./index.js";
+import { CheckResult } from "./index.js";
 import { range, checkTiles, getNeighbors } from "../util/index.js";
 import { Clause, nOf } from "../util/solver.js";
 
@@ -64,12 +64,10 @@ export const satSolver = (
   neighbors: Array<number>,
   checked: Array<number>,
   flagged: Array<number>
-): SolutionStep | false => {
+): CheckResult | false => {
   const cellFromVar = (satVar: number): number => Math.floor((satVar - 1) / 10);
   const mineFromVar = (satVar: number): number =>
     (cellFromVar(satVar) + 1) * 10;
-
-  const stepStart = performance.now();
 
   const clauses = baseClauses(
     width,
@@ -116,8 +114,6 @@ export const satSolver = (
       const newFlagged = [cellFromVar(relevantVar), ...flagged];
 
       return {
-        solver: Solver.Sat,
-        stepTime: performance.now() - stepStart,
         checked: newChecked,
         flagged: newFlagged,
       };
@@ -133,8 +129,6 @@ export const satSolver = (
     );
 
     return {
-      solver: Solver.Sat,
-      stepTime: performance.now() - stepStart,
       checked: newChecked,
       flagged,
     };

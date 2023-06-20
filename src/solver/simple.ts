@@ -1,4 +1,4 @@
-import { SolutionStep, Solver } from "./index.js";
+import { CheckResult } from "./index.js";
 import { checkTiles, getNeighbors } from "../util/index.js";
 import { difference, intersection, isSubsetOf } from "../util/array.js";
 
@@ -20,9 +20,7 @@ export const simpleSolver = (
   neighbors: Array<number>,
   checked: Array<number>,
   flagged: Array<number>
-): SolutionStep | false => {
-  const start = performance.now();
-
+): CheckResult | false => {
   const hasUncheckedNeighbor = (t: number) =>
     !isSubsetOf(getNeighbors(t, width, height), checked);
 
@@ -49,8 +47,6 @@ export const simpleSolver = (
     );
 
     return {
-      solver: Solver.Simple,
-      stepTime: performance.now() - start,
       checked: newChecked,
       flagged,
     };
@@ -70,10 +66,8 @@ export const simpleSolver = (
     );
 
     return {
-      solver: Solver.Simple,
       checked: checked.concat(uncheckedNeighbors),
       flagged: flagged.concat(uncheckedNeighbors),
-      stepTime: performance.now() - start,
     };
   }
 

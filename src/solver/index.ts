@@ -1,23 +1,29 @@
+import { mineCounterSolver } from "./mineCounter.js";
 import { satSolver } from "./sat.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
+
+export type CheckResult = {
+  flagged: Array<number>;
+  checked: Array<number>;
+};
 
 export enum Solver {
   Simple = "simple",
   Subset = "subset",
   Sat = "sat",
+  MineCounter = "mine-counter",
 }
 
 export interface Solution {
   solves: boolean;
   steps: Array<SolutionStep>;
 }
-export interface SolutionStep {
-  flagged: Array<number>;
-  checked: Array<number>;
+
+type SolutionStep = CheckResult & {
   stepTime: number;
   solver: Solver;
-}
+};
 
 export const solveBoard = (
   width: number,
@@ -35,6 +41,8 @@ export const solveBoard = (
   const puzzleComplete = () => currentChecked.length === width * height;
 
   while (!puzzleComplete()) {
+    const start = performance.now();
+
     // First attempt to find simple/ trivial solutions
     const simpleResult = simpleSolver(
       width,
@@ -45,7 +53,11 @@ export const solveBoard = (
     );
 
     if (simpleResult) {
-      steps.push(simpleResult);
+      steps.push({
+        solver: Solver.Simple,
+        stepTime: performance.now() - start,
+        ...simpleResult,
+      });
       currentChecked = simpleResult.checked;
       currentFlagged = simpleResult.flagged;
 
@@ -61,9 +73,34 @@ export const solveBoard = (
     );
 
     if (subsetResult) {
-      steps.push(subsetResult);
+      steps.push({
+        solver: Solver.Subset,
+        stepTime: performance.now() - start,
+        ...subsetResult,
+      });
       currentChecked = subsetResult.checked;
       currentFlagged = subsetResult.flagged;
+
+      continue;
+    }
+
+    const mineCounterResult = mineCounterSolver(
+      width,
+      height,
+      mineCount,
+      neighbors,
+      currentChecked,
+      currentFlagged
+    );
+
+    if (mineCounterResult) {
+      steps.push({
+        solver: Solver.MineCounter,
+        stepTime: performance.now() - start,
+        ...mineCounterResult,
+      });
+      currentChecked = mineCounterResult.checked;
+      currentFlagged = mineCounterResult.flagged;
 
       continue;
     }
@@ -84,7 +121,11 @@ export const solveBoard = (
 
     if (!satResult) return { solves: false, steps };
 
-    steps.push(satResult);
+    steps.push({
+      solver: Solver.Sat,
+      stepTime: performance.now() - start,
+      ...satResult,
+    });
     currentChecked = satResult.checked;
     currentFlagged = satResult.flagged;
   }

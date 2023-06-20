@@ -1,4 +1,4 @@
-import { SolutionStep, Solver } from "./index.js";
+import { CheckResult } from "./index.js";
 
 import {
   areMutuallyExclusive,
@@ -39,9 +39,9 @@ function* properSubsets(
   );
 
   for (const [ix, smaller] of sortedBoundryCells.entries()) {
-    const cellsWithAtLeastAsManyNeighbors = sortedBoundryCells.slice(ix + 1);
+    const otherCells = sortedBoundryCells.slice(ix + 1);
 
-    for (const larger of cellsWithAtLeastAsManyNeighbors) {
+    for (const larger of otherCells) {
       if (isProperSubsetOf(neighborCache[smaller], neighborCache[larger]))
         yield [[smaller], [larger]];
     }
@@ -72,9 +72,7 @@ export const subsetSolver = (
   neighbors: Array<number>,
   checked: Array<number>,
   flagged: Array<number>
-): SolutionStep | false => {
-  const start = performance.now();
-
+): CheckResult | false => {
   // All of the neighbors for a given cell
   const neighborCache = range(width * height).map((t) =>
     uGetNeighbors(t, width, height)
@@ -111,7 +109,7 @@ export const subsetSolver = (
           tile,
           width,
           height,
-          checked,
+          newChecked,
           flagged,
           neighbors
         );
@@ -120,8 +118,6 @@ export const subsetSolver = (
       return {
         flagged,
         checked: newChecked,
-        solver: Solver.Subset,
-        stepTime: performance.now() - start,
       };
     }
 
@@ -145,8 +141,6 @@ export const subsetSolver = (
       return {
         flagged: flagged.concat(safeToFlag),
         checked: checked.concat(safeToFlag),
-        solver: Solver.Subset,
-        stepTime: performance.now() - start,
       };
     }
   }
