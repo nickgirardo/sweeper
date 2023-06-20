@@ -5,6 +5,13 @@
   margin-bottom: 0.5em;
 }
 
+/* tmp for testing */
+.grid:not(:last-child) {
+  padding-bottom: 0.1em;
+  margin-bottom: 0.1em;
+  border-bottom: 1px solid black;
+}
+
 .grid {
   display: grid;
   width: min-content;

@@ -1,0 +1,31 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Sweep - Solver Test</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+        <link rel="stylesheet" type="text/css" href="/res/style.css" />
+        <script type="importmap">
+        {
+        "imports": {
+            "preact": "/node_modules/preact/dist/preact.mjs",
+            "preact/jsx-runtime": "/node_modules/preact/jsx-runtime/dist/jsxRuntime.mjs",
+            "preact/hooks": "/node_modules/preact/hooks/dist/hooks.mjs",
+            "@preact/signals": "/node_modules/@preact/signals/dist/signals.mjs",
+            "@preact/signals-core": "/node_modules/@preact/signals-core/dist/signals-core.mjs",
+            "boolean-sat": "/node_modules/boolean-sat/boolean-sat.js"
+        }
+        }
+        </script>
+
+    </head>
+    <body>
+    <div id="game-area"></div>
+    <script type="module" src="/dist/solver_index.js"></script>
+    </body>
+</html>
