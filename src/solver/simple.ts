@@ -1,6 +1,6 @@
 import { SolutionStep, Solver } from "./index.js";
 import { checkTiles, getNeighbors } from "../util/index.js";
-import { difference, intersection } from "../util/array.js";
+import { difference, intersection, isSubsetOf } from "../util/array.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
 //
@@ -24,7 +24,7 @@ export const simpleSolver = (
   const start = performance.now();
 
   const hasUncheckedNeighbor = (t: number) =>
-    !getNeighbors(t, width, height).every((t) => checked.includes(t));
+    !isSubsetOf(getNeighbors(t, width, height), checked);
 
   const boundryCells = difference(
     checked.filter(hasUncheckedNeighbor),

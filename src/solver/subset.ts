@@ -1,6 +1,12 @@
 import { SolutionStep, Solver } from "./index.js";
 
-import { difference, intersection } from "../util/array.js";
+import {
+  areMutuallyExclusive,
+  difference,
+  intersection,
+  isProperSubsetOf,
+  sumBy,
+} from "../util/array.js";
 import {
   checkTiles,
   range,
@@ -12,7 +18,7 @@ function* properSubsets(
   height: number,
   checked: Array<number>,
   flagged: Array<number>
-): Generator<[number, number]> {
+): Generator<[Array<number>, Array<number>]> {
   // All of the neighbors for a given cell which are unchecked
   const neighborCache = range(width * height).map((t) =>
     difference(uGetNeighbors(t, width, height), checked)
@@ -36,22 +42,26 @@ function* properSubsets(
     const cellsWithAtLeastAsManyNeighbors = sortedBoundryCells.slice(ix + 1);
 
     for (const larger of cellsWithAtLeastAsManyNeighbors) {
-      // smaller and larger may be equal in size, in which case smaller can not be a proper subset
-      // of larger
-      // Note that this check is technically unnecessary as the bellow check should also eliminate
-      // every pairing which this eliminates as smaller != larger so if they are the same size they
-      // must have at least one different cell.  However this should be much faster to evaluate
-      if (neighborCache[smaller].length === neighborCache[larger].length)
+      if (isProperSubsetOf(neighborCache[smaller], neighborCache[larger]))
+        yield [[smaller], [larger]];
+    }
+  }
+
+  for (const [ix, cell] of sortedBoundryCells.entries()) {
+    const otherCells = sortedBoundryCells.slice(ix + 1);
+
+    for (const other of otherCells) {
+      if (!areMutuallyExclusive(neighborCache[cell], neighborCache[other]))
         continue;
 
-      // If smaller includes some cell which is not in larger they are not proper subsets
-      if (
-        !neighborCache[smaller].every((n) => neighborCache[larger].includes(n))
-      )
-        continue;
+      const union = neighborCache[cell].concat(neighborCache[other]);
 
-      // From here we can be sure that smaller is a proper subset of larger!
-      yield [smaller, larger];
+      for (const c of sortedBoundryCells) {
+        if (c === cell || c === other) continue;
+
+        if (isProperSubsetOf(union, neighborCache[c]))
+          yield [[cell, other], [c]];
+      }
     }
   }
 }
@@ -74,7 +84,7 @@ export const subsetSolver = (
     difference(t, checked)
   );
 
-  const unflaggedNeighboringMines = (t: number) =>
+  const unflaggedNeighboringMines = (t: number): number =>
     neighbors[t] - intersection(neighborCache[t], flagged).length;
 
   for (const [smaller, larger] of properSubsets(
@@ -87,11 +97,12 @@ export const subsetSolver = (
     // Every cell which is in the larger but not the smaller is not a mine and can be
     // checked
     if (
-      unflaggedNeighboringMines(smaller) === unflaggedNeighboringMines(larger)
+      sumBy(smaller, unflaggedNeighboringMines) ===
+      sumBy(larger, unflaggedNeighboringMines)
     ) {
       const safeToCheck = difference(
-        uncheckedNeighborCache[larger],
-        uncheckedNeighborCache[smaller]
+        larger.flatMap((t) => uncheckedNeighborCache[t]),
+        smaller.flatMap((t) => uncheckedNeighborCache[t])
       );
 
       let newChecked = checked;
@@ -118,16 +129,17 @@ export const subsetSolver = (
     // between the number of neighboring cells, every cell neighboring the larger but not the smaller
     // is a mine and can be flagged
     const sizeDifference =
-      uncheckedNeighborCache[larger].length -
-      uncheckedNeighborCache[smaller].length;
+      sumBy(larger, (t) => uncheckedNeighborCache[t].length) -
+      sumBy(smaller, (t) => uncheckedNeighborCache[t].length);
 
     const mineDifference =
-      unflaggedNeighboringMines(larger) - unflaggedNeighboringMines(smaller);
+      sumBy(larger, unflaggedNeighboringMines) -
+      sumBy(smaller, unflaggedNeighboringMines);
 
     if (sizeDifference === mineDifference) {
       const safeToFlag = difference(
-        uncheckedNeighborCache[larger],
-        uncheckedNeighborCache[smaller]
+        larger.flatMap((t) => uncheckedNeighborCache[t]),
+        smaller.flatMap((t) => uncheckedNeighborCache[t])
       );
 
       return {
