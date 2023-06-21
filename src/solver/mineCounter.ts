@@ -1,10 +1,15 @@
 import { CheckResult } from "./index.js";
 import { checkTiles, getNeighbors, range } from "../util/index.js";
-import { difference, intersection, isSubsetOf, sumBy } from "../util/array.js";
+import {
+  difference,
+  intersection,
+  isSubsetOf,
+  subsequences,
+  sumBy,
+} from "../util/array.js";
 
-// TODO better name lol
-// TODO also return groups of size > 1
-function* interestingGroup(
+// Returns all subsequences of cells on the border
+function* boundrySubsequences(
   width: number,
   height: number,
   checked: Array<number>,
@@ -18,7 +23,7 @@ function* interestingGroup(
     flagged
   );
 
-  for (const t of boundryCells) yield [t];
+  for (const t of subsequences(boundryCells)) yield t;
 }
 
 export const mineCounterSolver = (
@@ -43,7 +48,7 @@ export const mineCounterSolver = (
 
   if (leftToFind > maxMinesWeBorder) return false;
 
-  for (const cells of interestingGroup(width, height, checked, flagged)) {
+  for (const cells of boundrySubsequences(width, height, checked, flagged)) {
     const flaggedNeighboringMineCount = (t: number) =>
       intersection(getNeighbors(t, width, height), flagged).length;
 
@@ -61,6 +66,8 @@ export const mineCounterSolver = (
         difference(range(width * height), checked),
         neighborsOfGroup
       );
+
+      if (!safeToCheck.length) continue;
 
       let newChecked = checked;
       for (const tile of safeToCheck) {

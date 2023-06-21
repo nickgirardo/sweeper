@@ -3,16 +3,15 @@ import { FunctionComponent } from "preact";
 import { Signal, signal } from "@preact/signals";
 import { useMemo } from "preact/hooks";
 
-import { solveBoard } from "../solver/index.js";
+import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
 import { Rand, checkTiles, genBoard, getNeighbors } from "../util/index.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 
-const seed = signal<number>(0);
-const width = signal<number>(4);
-const height = signal<number>(3);
-const mineCount = signal<number>(2);
-const useSat = signal<boolean>(false);
+const seed = signal<number>(27);
+const width = signal<number>(16);
+const height = signal<number>(16);
+const mineCount = signal<number>(40);
 
 export const ValueAdjustor: FunctionComponent<{
   label: string;
@@ -63,30 +62,45 @@ export const Solver: FunctionComponent<{}> = () => {
         neighbors,
         checked,
         [],
-        useSat.value
+        false
       ),
-    [seed.value, width.value, height.value, mineCount.value, useSat.value]
+    [seed.value, width.value, height.value, mineCount.value]
   );
 
   return (
     <div>
-      <ValueAdjustor label="Seed" sig={seed} />
-      <ValueAdjustor label="Width" sig={width} />
-      <ValueAdjustor label="Height" sig={height} />
-      <ValueAdjustor label="Mine Count" sig={mineCount} />
-      <label>
-        <input
-          type="checkbox"
-          checked={useSat.value}
-          //@ts-ignore
-          onChange={(ev) => (useSat.value = (ev as InputEvent)!.target.checked)}
-        />{" "}
-        Use SAT{" "}
-      </label>
+      <div className="controls">
+        <ValueAdjustor label="Seed" sig={seed} />
+        <ValueAdjustor label="Width" sig={width} />
+        <ValueAdjustor label="Height" sig={height} />
+        <ValueAdjustor label="Mine Count" sig={mineCount} />
+      </div>
       <br />
       <div>Puzzle{solution.solves ? "" : " NOT"} solvable!</div>
-      <div>
-        Total: {solution.steps.reduce((acc, b) => acc + b.stepTime, 0)}ms
+      <div className="report">
+        <div>
+          Total time: {solution.steps.reduce((acc, b) => acc + b.stepTime, 0)}ms
+        </div>
+        <div>Total steps: {solution.steps.length}</div>
+        <div>
+          Simple stpes:{" "}
+          {solution.steps.filter((s) => s.solver === SolverUsed.Simple).length}
+        </div>
+        <div>
+          Subset stpes:{" "}
+          {solution.steps.filter((s) => s.solver === SolverUsed.Subset).length}
+        </div>
+        <div>
+          Mine counter stpes:{" "}
+          {
+            solution.steps.filter((s) => s.solver === SolverUsed.MineCounter)
+              .length
+          }
+        </div>
+        <div>
+          SAT stpes:{" "}
+          {solution.steps.filter((s) => s.solver === SolverUsed.Sat).length}
+        </div>
       </div>
       <DisplayGrid
         width={width.value}

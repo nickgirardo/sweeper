@@ -23,3 +23,19 @@ export const union = <T>(a: Array<T>, b: Array<T>): Array<T> =>
 
 export const sumBy = <T>(a: Array<T>, fn: (arg0: T) => number): number =>
   a.reduce((acc, t) => acc + fn(t), 0);
+
+// NOTE implementing as generator to avoid having to calculate entire list ahead of time
+export function* subsequences<T>(xs: Array<T>): Generator<Array<T>> {
+  let list: Array<Array<T>> = [[]];
+  let next: Array<Array<T>> = [[]];
+
+  yield [];
+  for (const x of xs) {
+    for (const el of list) {
+      yield [x, ...el];
+      next.push([x, ...el]);
+    }
+
+    list = [...next];
+  }
+}
