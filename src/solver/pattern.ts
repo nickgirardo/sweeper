@@ -39,49 +39,45 @@ export const patternSolver = (
   // 1-2-1 Patterns
   const checkHorizontal121 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
-    neighborCache[t].includes(t + 1) &&
+    t % width < width - 2 &&
     boundryCells.includes(t + 1) &&
     neighboringMineCount(t + 1) === 2 &&
-    neighborCache[t + 1].includes(t + 2) &&
     boundryCells.includes(t + 2) &&
     neighboringMineCount(t + 2) === 1;
 
   const checkVertical121 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
-    neighborCache[t].includes(t + width) &&
+    t < width * (height - 2) &&
     boundryCells.includes(t + width) &&
     neighboringMineCount(t + width) === 2 &&
-    neighborCache[t + width].includes(t + 2 * width) &&
     boundryCells.includes(t + 2 * width) &&
     neighboringMineCount(t + 2 * width) === 1;
 
   // 1-2-2-1 Patterns
   const checkHorizontal1221 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
-    neighborCache[t].includes(t + 1) &&
+    t % width < width - 3 &&
     boundryCells.includes(t + 1) &&
     neighboringMineCount(t + 1) === 2 &&
-    neighborCache[t + 1].includes(t + 2) &&
     boundryCells.includes(t + 2) &&
     neighboringMineCount(t + 2) === 2 &&
-    neighborCache[t + 2].includes(t + 3) &&
     boundryCells.includes(t + 3) &&
     neighboringMineCount(t + 3) === 1;
 
   const checkVertical1221 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
-    neighborCache[t].includes(t + width) &&
+    t < width * (height - 3) &&
     boundryCells.includes(t + width) &&
     neighboringMineCount(t + width) === 2 &&
-    neighborCache[t + width].includes(t + 2 * width) &&
     boundryCells.includes(t + 2 * width) &&
     neighboringMineCount(t + 2 * width) === 2 &&
-    neighborCache[t + 2 * width].includes(t + 3 * width) &&
     boundryCells.includes(t + 3 * width) &&
     neighboringMineCount(t + 3 * width) === 1;
 
   // Look for patterns
-  for (const t of boundryCells) {
+  // NOTE Regarding the slice: the last two cells cannot possible be the start of a pattern
+  // as patterns have a minimum length of 3
+  for (const t of boundryCells.slice(0, -2)) {
     let safeToCheck: Array<number> = [];
     // Look for horizontal 1-2-1 pattern
     if (checkHorizontal121(t)) {
