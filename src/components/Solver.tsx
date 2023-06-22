@@ -103,6 +103,10 @@ export const Solver: FunctionComponent<{}> = () => {
           {solution.steps.filter((s) => s.solver === SolverUsed.Subset).length}
         </div>
         <div>
+          Pattern stpes:{" "}
+          {solution.steps.filter((s) => s.solver === SolverUsed.Pattern).length}
+        </div>
+        <div>
           Mine counter stpes:{" "}
           {
             solution.steps.filter((s) => s.solver === SolverUsed.MineCounter)

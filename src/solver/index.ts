@@ -1,6 +1,7 @@
 import { mineCounterSolver } from "./mineCounter.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
+import { patternSolver } from "./pattern.js";
 
 export type CheckResult = {
   flagged: Array<number>;
@@ -10,6 +11,7 @@ export type CheckResult = {
 export enum Solver {
   Simple = "simple",
   Subset = "subset",
+  Pattern = "pattern",
   MineCounter = "mine-counter",
 }
 
@@ -79,6 +81,26 @@ export const solveBoard = (
       });
       currentChecked = subsetResult.checked;
       currentFlagged = subsetResult.flagged;
+
+      continue;
+    }
+
+    const patternSolverResult = patternSolver(
+      width,
+      height,
+      neighbors,
+      currentChecked,
+      currentFlagged
+    );
+
+    if (patternSolverResult) {
+      steps.push({
+        solver: Solver.Pattern,
+        stepTime: performance.now() - setpStart,
+        ...patternSolverResult,
+      });
+      currentChecked = patternSolverResult.checked;
+      currentFlagged = patternSolverResult.flagged;
 
       continue;
     }
