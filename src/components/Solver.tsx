@@ -7,6 +7,7 @@ import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
 import { Rand, checkTiles, genBoard, getNeighbors } from "../util/index.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
+import { isSolutionCorrect } from "../util/solver.js";
 
 const seed = signal<number>(0);
 const width = signal<number>(16);
@@ -33,7 +34,7 @@ export const Solver: FunctionComponent<{}> = () => {
     startingTile,
     ...getNeighbors(startingTile, width.value, height.value),
   ];
-  const [_mines, neighbors] = useMemo(
+  const [mines, neighbors] = useMemo(
     () =>
       genBoard(
         width.value,
@@ -76,6 +77,12 @@ export const Solver: FunctionComponent<{}> = () => {
       </div>
       <br />
       <div>Puzzle{solution.solves ? "" : " NOT"} solvable!</div>
+      {solution.solves && (
+        <div>
+          Solution{" "}
+          {isSolutionCorrect(solution, mines) ? "correct" : "INCORRECT!!"}
+        </div>
+      )}
       <div className="report">
         <div>Total time: {solution.totalTime}ms</div>
         <div>Total steps: {solution.steps.length}</div>
