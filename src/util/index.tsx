@@ -1,3 +1,5 @@
+import { difference, intersection } from "./array.js";
+
 export const range = (n: number): Array<number> => [...new Array(n).keys()];
 
 export const classNames = (...rest: Array<string | false>): string =>
@@ -64,8 +66,8 @@ export const checkTiles = (
   tile: number,
   width: number,
   height: number,
-  checkedTiles: Array<number>,
-  flaggedTiles: Array<number>,
+  checked: Array<number>,
+  flagged: Array<number>,
   neighbors: Array<number>
 ): Array<number> => {
   const go = (tile: number): void => {
@@ -77,23 +79,25 @@ export const checkTiles = (
     if (neighbors[tile] === 0) getNeighbors(tile, width, height).forEach(go);
   };
 
-  if (flaggedTiles.includes(tile)) return checkedTiles;
+  if (flagged.includes(tile)) return checked;
 
-  const newTiles = [...checkedTiles];
+  const newTiles = [...checked];
 
   if (newTiles.includes(tile)) {
-    const flaggedNeighbors = getNeighbors(tile, width, height).filter((n) =>
-      flaggedTiles.includes(n)
+    const flaggedNeighbors = intersection(
+      getNeighbors(tile, width, height),
+      flagged
     );
 
     if (neighbors[tile] === flaggedNeighbors.length) {
-      const unflaggedNeighbors = getNeighbors(tile, width, height).filter(
-        (n) => !flaggedTiles.includes(n)
+      const unflaggedNeighbors = difference(
+        getNeighbors(tile, width, height),
+        flagged
       );
       unflaggedNeighbors.forEach(go);
       return newTiles;
     }
-    return checkedTiles;
+    return checked;
   }
 
   go(tile);
