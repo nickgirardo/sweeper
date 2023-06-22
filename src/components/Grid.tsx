@@ -2,12 +2,8 @@ import { FunctionComponent } from "preact";
 import { useEffect } from "preact/hooks";
 import { useSignal, batch } from "@preact/signals";
 
-import {
-  range,
-  getNeighbors as uGetNeighbors,
-  checkTiles,
-  genBoard,
-} from "../util/index.js";
+import { genBoard } from "../puzzle.js";
+import { range, checkTiles, Rand } from "../util/index.js";
 
 import { Tile } from "./Tile.js";
 
@@ -24,19 +20,14 @@ export const Grid: FunctionComponent<Props> = (props) => {
   const checkedTiles = useSignal<Array<number>>([]);
   const flaggedTiles = useSignal<Array<number>>([]);
 
-  const getNeighbors = (tile: number) =>
-    uGetNeighbors(tile, props.width, props.height);
-
   // Generate grid
   useEffect(() => {
-    // Don't generate any mines in the tiles around the starting tile
-    const freeTiles = [props.startingTile, ...getNeighbors(props.startingTile)];
-
     const [newMines, newNeighbors] = genBoard(
       props.width,
       props.height,
       props.mineCount,
-      freeTiles
+      props.startingTile,
+      new Rand(performance.now())
     );
 
     batch(() => {

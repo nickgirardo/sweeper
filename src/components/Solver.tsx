@@ -4,13 +4,8 @@ import { Signal, signal } from "@preact/signals";
 import { useMemo } from "preact/hooks";
 
 import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
-import {
-  Rand,
-  checkTiles,
-  genBoard,
-  getNeighbors,
-  range,
-} from "../util/index.js";
+import { Rand, checkTiles, range } from "../util/index.js";
+import { genBoard } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 import { isSolutionCorrect } from "../util/solver.js";
@@ -33,20 +28,16 @@ export const ValueAdjustor: FunctionComponent<{
 );
 
 export const Solver: FunctionComponent<{}> = () => {
+  // For now, hardcoding starting tile as 0
   const startingTile = 0;
 
-  // For now, hardcoding starting tile as 0
-  const freeTiles = [
-    startingTile,
-    ...getNeighbors(startingTile, width.value, height.value),
-  ];
   const [mines, neighbors] = useMemo(
     () =>
       genBoard(
         width.value,
         height.value,
         mineCount.value,
-        freeTiles,
+        startingTile,
         new Rand(seed.value)
       ),
     [seed.value, width.value, height.value, mineCount.value]

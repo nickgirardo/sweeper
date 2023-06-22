@@ -1,11 +1,7 @@
 import { solveBoard } from "./solver/index.js";
-import {
-  Rand,
-  checkTiles,
-  genBoard,
-  getNeighbors,
-  range,
-} from "./util/index.js";
+import { genBoard } from "./puzzle.js";
+import { Rand, checkTiles, range } from "./util/index.js";
+
 import { isSolutionCorrect } from "./util/solver.js";
 
 onmessage = (_ev: MessageEvent<any>): void => {
@@ -18,11 +14,6 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
   const solvable: Array<number> = [];
   const unsolvable: Array<number> = [];
-
-  const freeTiles = [
-    startingTile,
-    ...getNeighbors(startingTile, width, height),
-  ];
 
   const stepCounts = {
     simple: 0,
@@ -37,7 +28,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
       width,
       height,
       mineCount,
-      freeTiles,
+      startingTile,
       new Rand(seed)
     );
 
