@@ -10,6 +10,7 @@ import { isSolutionCorrect } from "./util/solver.js";
 
 onmessage = (_ev: MessageEvent<any>): void => {
   console.log("worker: starting");
+
   const width = 16;
   const height = 16;
   const mineCount = 40;
@@ -23,7 +24,15 @@ onmessage = (_ev: MessageEvent<any>): void => {
     ...getNeighbors(startingTile, width, height),
   ];
 
+  const stepCounts = {
+    simple: 0,
+    subset: 0,
+    pattern: 0,
+    "mine-counter": 0,
+  };
+
   for (const seed of range(1000)) {
+    if (seed % 50 === 0) console.log(seed);
     const [mines, neighbors] = genBoard(
       width,
       height,
@@ -42,6 +51,12 @@ onmessage = (_ev: MessageEvent<any>): void => {
       []
     );
 
+    if (solution.solves) {
+      for (const step of solution.steps) {
+        stepCounts[step.solver]++;
+      }
+    }
+
     if (solution.solves && !isSolutionCorrect(solution, mines))
       console.log(
         "something went wrong",
@@ -53,5 +68,8 @@ onmessage = (_ev: MessageEvent<any>): void => {
     if (solution.solves) solvable.push(seed);
     else unsolvable.push(seed);
   }
+
+  console.log(stepCounts);
+
   postMessage([solvable.length, unsolvable.length]);
 };
