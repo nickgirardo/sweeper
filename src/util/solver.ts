@@ -1,3 +1,5 @@
+import { Solution } from "../solver/index.js";
+import { difference } from "./array.js";
 import {
   popcount,
   popcount32,
@@ -7,6 +9,13 @@ import {
 } from "./bitjank.js";
 
 export type Clause = Array<number>;
+
+export const isSolutionCorrect = (
+  solution: Solution,
+  mines: Array<number>
+): boolean =>
+  solution.steps.at(-1)!.flagged.length === mines.length &&
+  difference(solution.steps.at(-1)!.flagged, mines).length === 0;
 
 function* nOfGen32(n: number, vars: Array<number>): Generator<Clause> {
   for (let i = 0; i < 2 ** vars.length; i++) {
