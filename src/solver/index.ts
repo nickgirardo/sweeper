@@ -1,5 +1,4 @@
 import { mineCounterSolver } from "./mineCounter.js";
-import { satSolver } from "./sat.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
 
@@ -18,6 +17,7 @@ export enum Solver {
 export interface Solution {
   solves: boolean;
   steps: Array<SolutionStep>;
+  totalTime: number;
 }
 
 type SolutionStep = CheckResult & {
@@ -31,9 +31,9 @@ export const solveBoard = (
   mineCount: number,
   neighbors: Array<number>,
   checked: Array<number>,
-  flagged: Array<number>,
-  useSat: boolean
+  flagged: Array<number>
 ): Solution => {
+  const puzzleStart = performance.now();
   const steps: Array<SolutionStep> = [];
   let currentChecked = checked;
   let currentFlagged = flagged;
@@ -41,7 +41,7 @@ export const solveBoard = (
   const puzzleComplete = () => currentChecked.length === width * height;
 
   while (!puzzleComplete()) {
-    const start = performance.now();
+    const setpStart = performance.now();
 
     // First attempt to find simple/ trivial solutions
     const simpleResult = simpleSolver(
@@ -55,7 +55,7 @@ export const solveBoard = (
     if (simpleResult) {
       steps.push({
         solver: Solver.Simple,
-        stepTime: performance.now() - start,
+        stepTime: performance.now() - setpStart,
         ...simpleResult,
       });
       currentChecked = simpleResult.checked;
@@ -75,7 +75,7 @@ export const solveBoard = (
     if (subsetResult) {
       steps.push({
         solver: Solver.Subset,
-        stepTime: performance.now() - start,
+        stepTime: performance.now() - setpStart,
         ...subsetResult,
       });
       currentChecked = subsetResult.checked;
@@ -96,7 +96,7 @@ export const solveBoard = (
     if (mineCounterResult) {
       steps.push({
         solver: Solver.MineCounter,
-        stepTime: performance.now() - start,
+        stepTime: performance.now() - setpStart,
         ...mineCounterResult,
       });
       currentChecked = mineCounterResult.checked;
@@ -105,30 +105,10 @@ export const solveBoard = (
       continue;
     }
 
-    if (!useSat) return { solves: false, steps };
-
-    // If we weren't able to find a simple solution
-    // Fallback to using a SAT solver
-    // This is more thorough but more computationally expensive
-    const satResult = satSolver(
-      width,
-      height,
-      mineCount,
-      neighbors,
-      currentChecked,
-      currentFlagged
-    );
-
-    if (!satResult) return { solves: false, steps };
-
-    steps.push({
-      solver: Solver.Sat,
-      stepTime: performance.now() - start,
-      ...satResult,
-    });
-    currentChecked = satResult.checked;
-    currentFlagged = satResult.flagged;
+    // None of our solvers have produced any new information
+    // We've failed to solve the puzzle
+    return { solves: false, totalTime: performance.now() - puzzleStart, steps };
   }
 
-  return { solves: true, steps };
+  return { solves: true, totalTime: performance.now() - puzzleStart, steps };
 };

@@ -8,7 +8,7 @@ import { Rand, checkTiles, genBoard, getNeighbors } from "../util/index.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 
-const seed = signal<number>(27);
+const seed = signal<number>(0);
 const width = signal<number>(16);
 const height = signal<number>(16);
 const mineCount = signal<number>(40);
@@ -61,8 +61,7 @@ export const Solver: FunctionComponent<{}> = () => {
         mineCount.value,
         neighbors,
         checked,
-        [],
-        false
+        []
       ),
     [seed.value, width.value, height.value, mineCount.value]
   );
@@ -78,9 +77,7 @@ export const Solver: FunctionComponent<{}> = () => {
       <br />
       <div>Puzzle{solution.solves ? "" : " NOT"} solvable!</div>
       <div className="report">
-        <div>
-          Total time: {solution.steps.reduce((acc, b) => acc + b.stepTime, 0)}ms
-        </div>
+        <div>Total time: {solution.totalTime}ms</div>
         <div>Total steps: {solution.steps.length}</div>
         <div>
           Simple stpes:{" "}
