@@ -67,6 +67,8 @@ export const Solver: FunctionComponent<{}> = () => {
     [seed.value, width.value, height.value, mineCount.value]
   );
 
+  const finalBoard = solution.steps.at(-1);
+
   return (
     <div>
       <div className="controls">
@@ -113,20 +115,15 @@ export const Solver: FunctionComponent<{}> = () => {
         neighbors={neighbors}
         flagged={[]}
       />
-      {solution.steps.map((s) => (
-        <>
-          <div>
-            {s.solver}, {s.stepTime}ms
-          </div>
-          <DisplayGrid
-            width={width.value}
-            height={height.value}
-            checked={s.checked}
-            neighbors={neighbors}
-            flagged={s.flagged}
-          />
-        </>
-      ))}
+      {finalBoard && (
+        <DisplayGrid
+          width={width.value}
+          height={height.value}
+          checked={finalBoard.checked}
+          neighbors={neighbors}
+          flagged={finalBoard.flagged}
+        />
+      )}
     </div>
   );
 };
