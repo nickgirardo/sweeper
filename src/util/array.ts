@@ -18,6 +18,9 @@ export const isProperSubsetOf = <T>(a: Array<T>, b: Array<T>): boolean =>
 export const uniq = <T>(a: Array<T>): Array<T> =>
   a.filter((t, ix) => !a.slice(ix + 1).includes(t));
 
+export const isUniq = <T>(a: Array<T>): boolean =>
+  a.every((t, ix) => !a.slice(ix + 1).includes(t));
+
 export const union = <T>(a: Array<T>, b: Array<T>): Array<T> =>
   uniq(a.concat(b));
 
@@ -34,6 +37,25 @@ export function* subsequences<T>(xs: Array<T>): Generator<Array<T>> {
     for (const el of list) {
       yield [x, ...el];
       next.push([x, ...el]);
+    }
+
+    list = [...next];
+  }
+}
+
+export function* subsequencesOfMaxLength<T>(
+  xs: Array<T>,
+  maxLength: number
+): Generator<Array<T>> {
+  let list: Array<Array<T>> = [[]];
+  let next: Array<Array<T>> = [[]];
+
+  yield [];
+  for (const x of xs) {
+    for (const el of list) {
+      const subseq = [...el, x];
+      yield subseq;
+      if (subseq.length < maxLength) next.push([x, ...el]);
     }
 
     list = [...next];

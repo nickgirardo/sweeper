@@ -4,8 +4,9 @@ import {
   difference,
   intersection,
   isSubsetOf,
-  subsequences,
   sumBy,
+  isUniq,
+  subsequencesOfMaxLength,
 } from "../util/array.js";
 
 // Returns all subsequences of cells on the border
@@ -15,6 +16,8 @@ function* boundrySubsequences(
   checked: Array<number>,
   flagged: Array<number>
 ): Generator<Array<number>> {
+  const maxSubsequenceSize = 4;
+
   const hasUncheckedNeighbor = (t: number) =>
     !isSubsetOf(getNeighbors(t, width, height), checked);
 
@@ -23,7 +26,22 @@ function* boundrySubsequences(
     flagged
   );
 
-  for (const t of subsequences(boundryCells)) yield t;
+  const cache: Array<Array<number>> = [];
+  for (const t of boundryCells) {
+    cache[t] = difference(getNeighbors(t, width, height), checked);
+  }
+
+  for (const cells of subsequencesOfMaxLength(
+    boundryCells,
+    maxSubsequenceSize
+  )) {
+    if (cells.length > maxSubsequenceSize) continue;
+
+    const neighbors = cells.flatMap((t) => cache[t]);
+    if (!isUniq(neighbors)) continue;
+
+    yield cells;
+  }
 }
 
 export const mineCounterSolver = (
@@ -36,6 +54,11 @@ export const mineCounterSolver = (
 ): CheckResult | false => {
   const foundCount = flagged.length;
   const leftToFind = mineCount - foundCount;
+
+  // Only attempt using this solver when 80% of the board has already been checked
+  const requiredFillRatio = 0.8;
+
+  if (width * height * requiredFillRatio > checked.length) return false;
 
   // Naive check to see if using this solver makes any possible sense
   // If there are more mines remaining then we could possibly know about then we should give up
