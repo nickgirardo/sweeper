@@ -4,12 +4,18 @@ import { Signal, signal } from "@preact/signals";
 import { useMemo } from "preact/hooks";
 
 import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
-import { Rand, checkTiles, genBoard, getNeighbors } from "../util/index.js";
+import {
+  Rand,
+  checkTiles,
+  genBoard,
+  getNeighbors,
+  range,
+} from "../util/index.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 import { isSolutionCorrect } from "../util/solver.js";
 
-const seed = signal<number>(0);
+const seed = signal<number>(20);
 const width = signal<number>(16);
 const height = signal<number>(16);
 const mineCount = signal<number>(40);
@@ -118,6 +124,15 @@ export const Solver: FunctionComponent<{}> = () => {
           checked={finalBoard.checked}
           neighbors={neighbors}
           flagged={finalBoard.flagged}
+        />
+      )}
+      {!solution.solves && (
+        <DisplayGrid
+          width={width.value}
+          height={height.value}
+          checked={range(width.value * height.value)}
+          neighbors={neighbors}
+          flagged={mines}
         />
       )}
     </div>
