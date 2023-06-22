@@ -103,10 +103,6 @@ export const Solver: FunctionComponent<{}> = () => {
               .length
           }
         </div>
-        <div>
-          SAT stpes:{" "}
-          {solution.steps.filter((s) => s.solver === SolverUsed.Sat).length}
-        </div>
       </div>
       <DisplayGrid
         width={width.value}

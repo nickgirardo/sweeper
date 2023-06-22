@@ -10,7 +10,6 @@ export type CheckResult = {
 export enum Solver {
   Simple = "simple",
   Subset = "subset",
-  Sat = "sat",
   MineCounter = "mine-counter",
 }
 
