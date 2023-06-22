@@ -36,6 +36,7 @@ export const patternSolver = (
     flagged
   );
 
+  // 1-2-1 Patterns
   const checkHorizontal121 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
     neighborCache[t].includes(t + 1) &&
@@ -54,11 +55,37 @@ export const patternSolver = (
     boundryCells.includes(t + 2 * width) &&
     neighboringMineCount(t + 2 * width) === 1;
 
+  // 1-2-2-1 Patterns
+  const checkHorizontal1221 = (t: number): boolean =>
+    neighboringMineCount(t) === 1 &&
+    neighborCache[t].includes(t + 1) &&
+    boundryCells.includes(t + 1) &&
+    neighboringMineCount(t + 1) === 2 &&
+    neighborCache[t + 1].includes(t + 2) &&
+    boundryCells.includes(t + 2) &&
+    neighboringMineCount(t + 2) === 2 &&
+    neighborCache[t + 2].includes(t + 3) &&
+    boundryCells.includes(t + 3) &&
+    neighboringMineCount(t + 3) === 1;
+
+  const checkVertical1221 = (t: number): boolean =>
+    neighboringMineCount(t) === 1 &&
+    neighborCache[t].includes(t + width) &&
+    boundryCells.includes(t + width) &&
+    neighboringMineCount(t + width) === 2 &&
+    neighborCache[t + width].includes(t + 2 * width) &&
+    boundryCells.includes(t + 2 * width) &&
+    neighboringMineCount(t + 2 * width) === 2 &&
+    neighborCache[t + 2 * width].includes(t + 3 * width) &&
+    boundryCells.includes(t + 3 * width) &&
+    neighboringMineCount(t + 3 * width) === 1;
+
   // Look for patterns
   for (const t of boundryCells) {
+    let safeToCheck: Array<number> = [];
     // Look for horizontal 1-2-1 pattern
     if (checkHorizontal121(t)) {
-      const safeToCheck = intersection(
+      safeToCheck = intersection(
         [
           t - width - 1,
           t - width + 1,
@@ -71,29 +98,9 @@ export const patternSolver = (
         ],
         union(uncheckedNeighborCache[t], uncheckedNeighborCache[t + 2])
       );
-
-      if (safeToCheck.length) {
-        let newChecked = checked;
-        for (const tile of safeToCheck) {
-          newChecked = checkTiles(
-            tile,
-            width,
-            height,
-            newChecked,
-            flagged,
-            neighbors
-          );
-        }
-        return {
-          flagged,
-          checked: newChecked,
-        };
-      }
-    }
-
-    // Look for vertical 1-2-1 pattern
-    if (checkVertical121(t)) {
-      const safeToCheck = intersection(
+    } else if (checkVertical121(t)) {
+      // Look for vertical 1-2-1 pattern
+      safeToCheck = intersection(
         [
           t - width - 1,
           t - width,
@@ -106,24 +113,59 @@ export const patternSolver = (
         ],
         union(uncheckedNeighborCache[t], uncheckedNeighborCache[t + 2 * width])
       );
+    } else if (checkHorizontal1221(t)) {
+      safeToCheck = intersection(
+        [
+          t - width - 1,
+          t - width,
+          t - width + 3,
+          t - width + 4,
+          t - 1,
+          t + 4,
+          t - width - 1,
+          t - width,
+          t - width + 3,
+          t - width + 4,
+        ],
+        // NOTE concat can be used here instead of union as the cells cannot have overlap
+        // This just saves on calling uniq on the array
+        uncheckedNeighborCache[t].concat(uncheckedNeighborCache[t + 3])
+      );
+    } else if (checkVertical1221(t)) {
+      // Look for vertical 1-2-1 pattern
+      safeToCheck = intersection(
+        [
+          t - width - 1,
+          t - width,
+          t - width + 1,
+          t - 1,
+          t + 1,
+          t + 3 * width - 1,
+          t + 3 * width + 1,
+          t + 4 * width - 1,
+          t + 4 * width,
+          t + 4 * width + 1,
+        ],
+        uncheckedNeighborCache[t].concat(uncheckedNeighborCache[t + 3 * width])
+      );
+    }
 
-      if (safeToCheck.length) {
-        let newChecked = checked;
-        for (const tile of safeToCheck) {
-          newChecked = checkTiles(
-            tile,
-            width,
-            height,
-            newChecked,
-            flagged,
-            neighbors
-          );
-        }
-        return {
+    if (safeToCheck.length) {
+      let newChecked = checked;
+      for (const tile of safeToCheck) {
+        newChecked = checkTiles(
+          tile,
+          width,
+          height,
+          newChecked,
           flagged,
-          checked: newChecked,
-        };
+          neighbors
+        );
       }
+      return {
+        flagged,
+        checked: newChecked,
+      };
     }
   }
 
