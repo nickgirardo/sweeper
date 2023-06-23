@@ -1,5 +1,5 @@
 import { CheckResult } from "./index.js";
-import { checkTiles, getNeighbors, range } from "../util/index.js";
+import { getNeighbors, range } from "../util/index.js";
 import {
   difference,
   intersection,
@@ -8,6 +8,7 @@ import {
   isUniq,
   subsequencesOfMaxLength,
 } from "../util/array.js";
+import { Puzzle } from "../puzzle.js";
 
 // Returns all subsequences of cells on the border
 function* boundrySubsequences(
@@ -44,14 +45,8 @@ function* boundrySubsequences(
   }
 }
 
-export const mineCounterSolver = (
-  width: number,
-  height: number,
-  mineCount: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): CheckResult | false => {
+export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
+  const { width, height, flagged, checked, mineCount, neighbors } = puzzle;
   const foundCount = flagged.length;
   const leftToFind = mineCount - foundCount;
 
@@ -92,21 +87,9 @@ export const mineCounterSolver = (
 
       if (!safeToCheck.length) continue;
 
-      let newChecked = checked;
-      for (const tile of safeToCheck) {
-        newChecked = checkTiles(
-          tile,
-          width,
-          height,
-          newChecked,
-          flagged,
-          neighbors
-        );
-      }
-
       return {
-        flagged,
-        checked: newChecked,
+        safeToCheck,
+        safeToFlag: [],
       };
     }
   }

@@ -1,4 +1,14 @@
-import { Rand, getNeighbors } from "./util/index.js";
+import { Rand, checkTiles, getNeighbors } from "./util/index.js";
+
+export type Puzzle = {
+  width: number;
+  height: number;
+  mineCount: number;
+  mines: Array<number>;
+  neighbors: Array<number>;
+  flagged: Array<number>;
+  checked: Array<number>;
+};
 
 export const genBoard = (
   width: number,
@@ -6,7 +16,7 @@ export const genBoard = (
   mineCount: number,
   startingTile: number,
   rand: Rand
-): [Array<number>, Array<number>] => {
+): Puzzle => {
   const freeTiles = [
     startingTile,
     ...getNeighbors(startingTile, width, height),
@@ -29,5 +39,19 @@ export const genBoard = (
   for (const mine of mines) {
     getNeighbors(mine, width, height).forEach((tile) => neighbors[tile]++);
   }
-  return [mines, neighbors];
+
+  const puzzle = {
+    width,
+    height,
+    mineCount,
+    mines,
+    neighbors,
+    flagged: [],
+    checked: [],
+  };
+
+  return {
+    ...puzzle,
+    checked: checkTiles(startingTile, puzzle),
+  };
 };

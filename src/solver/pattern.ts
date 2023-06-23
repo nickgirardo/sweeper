@@ -1,21 +1,13 @@
 import { CheckResult } from "./index.js";
 
 import { difference, intersection, union } from "../util/array.js";
-import {
-  checkTiles,
-  range,
-  getNeighbors as uGetNeighbors,
-} from "../util/index.js";
+import { range, getNeighbors as uGetNeighbors } from "../util/index.js";
+import { Puzzle } from "../puzzle.js";
 
 // TODO explain why
 // TODO explain why not higher patterns like 13231
-export const patternSolver = (
-  width: number,
-  height: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): CheckResult | false => {
+export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
+  const { width, height, checked, flagged, neighbors } = puzzle;
   // All of the neighbors for a given cell
   const neighborCache = range(width * height).map((t) =>
     uGetNeighbors(t, width, height)
@@ -146,23 +138,11 @@ export const patternSolver = (
       );
     }
 
-    if (safeToCheck.length) {
-      let newChecked = checked;
-      for (const tile of safeToCheck) {
-        newChecked = checkTiles(
-          tile,
-          width,
-          height,
-          newChecked,
-          flagged,
-          neighbors
-        );
-      }
+    if (safeToCheck.length)
       return {
-        flagged,
-        checked: newChecked,
+        safeToCheck,
+        safeToFlag: [],
       };
-    }
   }
 
   return false;

@@ -2,10 +2,13 @@ import { mineCounterSolver } from "./mineCounter.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
 import { patternSolver } from "./pattern.js";
+import { Puzzle } from "../puzzle.js";
+import { union } from "../util/array.js";
+import { checkTiles } from "../util/index.js";
 
 export type CheckResult = {
-  flagged: Array<number>;
-  checked: Array<number>;
+  safeToCheck: Array<number>;
+  safeToFlag: Array<number>;
 };
 
 export enum Solver {
@@ -21,109 +24,55 @@ export interface Solution {
   totalTime: number;
 }
 
-type SolutionStep = CheckResult & {
+type SolutionStep = {
   stepTime: number;
   solver: Solver;
+  checked: Array<number>;
+  flagged: Array<number>;
 };
 
-export const solveBoard = (
-  width: number,
-  height: number,
-  mineCount: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): Solution => {
+export const solveBoard = (puzzle: Puzzle): Solution => {
+  const { width, height } = puzzle;
+
   const puzzleStart = performance.now();
   const steps: Array<SolutionStep> = [];
-  let currentChecked = checked;
-  let currentFlagged = flagged;
 
-  const puzzleComplete = () => currentChecked.length === width * height;
+  const puzzleComplete = () => puzzle.checked.length === width * height;
 
-  while (!puzzleComplete()) {
+  const solvers: Array<[(p: Puzzle) => CheckResult | false, Solver]> = [
+    [simpleSolver, Solver.Simple],
+    [subsetSolver, Solver.Subset],
+    [patternSolver, Solver.Pattern],
+    [mineCounterSolver, Solver.MineCounter],
+  ];
+
+  outer: while (!puzzleComplete()) {
     const setpStart = performance.now();
 
-    // First attempt to find simple/ trivial solutions
-    const simpleResult = simpleSolver(
-      width,
-      height,
-      neighbors,
-      currentChecked,
-      currentFlagged
-    );
+    for (const [solver, solverUsed] of solvers) {
+      const result = solver(puzzle);
 
-    if (simpleResult) {
+      if (!result) continue;
+
+      if (result.safeToCheck.length === 0 && result.safeToFlag.length === 0)
+        throw new Error("no change :(");
+
+      for (const t of result.safeToCheck) {
+        puzzle.checked = checkTiles(t, puzzle);
+      }
+
+      puzzle.checked = union(puzzle.checked, result.safeToFlag);
+
+      puzzle.flagged = union(puzzle.flagged, result.safeToFlag);
+
       steps.push({
-        solver: Solver.Simple,
+        solver: solverUsed,
         stepTime: performance.now() - setpStart,
-        ...simpleResult,
+        checked: [...puzzle.checked],
+        flagged: [...puzzle.flagged],
       });
-      currentChecked = simpleResult.checked;
-      currentFlagged = simpleResult.flagged;
 
-      continue;
-    }
-
-    const subsetResult = subsetSolver(
-      width,
-      height,
-      neighbors,
-      currentChecked,
-      currentFlagged
-    );
-
-    if (subsetResult) {
-      steps.push({
-        solver: Solver.Subset,
-        stepTime: performance.now() - setpStart,
-        ...subsetResult,
-      });
-      currentChecked = subsetResult.checked;
-      currentFlagged = subsetResult.flagged;
-
-      continue;
-    }
-
-    const patternSolverResult = patternSolver(
-      width,
-      height,
-      neighbors,
-      currentChecked,
-      currentFlagged
-    );
-
-    if (patternSolverResult) {
-      steps.push({
-        solver: Solver.Pattern,
-        stepTime: performance.now() - setpStart,
-        ...patternSolverResult,
-      });
-      currentChecked = patternSolverResult.checked;
-      currentFlagged = patternSolverResult.flagged;
-
-      continue;
-    }
-
-    const mineCounterResult = mineCounterSolver(
-      width,
-      height,
-      mineCount,
-      neighbors,
-      currentChecked,
-      currentFlagged
-    );
-
-    if (mineCounterResult) {
-      steps.push({
-        solver: Solver.MineCounter,
-        stepTime: performance.now() - setpStart,
-        ...mineCounterResult,
-      });
-      currentChecked = mineCounterResult.checked;
-      currentFlagged = mineCounterResult.flagged;
-
-      continue;
+      continue outer;
     }
 
     // None of our solvers have produced any new information

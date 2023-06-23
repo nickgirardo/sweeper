@@ -24,7 +24,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
   for (const seed of range(1000)) {
     if (seed % 50 === 0) console.log(seed);
-    const [mines, neighbors] = genBoard(
+    const puzzle = genBoard(
       width,
       height,
       mineCount,
@@ -32,15 +32,8 @@ onmessage = (_ev: MessageEvent<any>): void => {
       new Rand(seed)
     );
 
-    const checked = checkTiles(startingTile, width, height, [], [], neighbors);
-    const solution = solveBoard(
-      width,
-      height,
-      mineCount,
-      neighbors,
-      checked,
-      []
-    );
+    puzzle.checked = checkTiles(startingTile, puzzle);
+    const solution = solveBoard(puzzle);
 
     if (solution.solves) {
       for (const step of solution.steps) {
@@ -48,12 +41,12 @@ onmessage = (_ev: MessageEvent<any>): void => {
       }
     }
 
-    if (solution.solves && !isSolutionCorrect(solution, mines))
+    if (solution.solves && !isSolutionCorrect(solution, puzzle.mines))
       console.log(
         "something went wrong",
         seed,
         solution.steps.at(-1)!.flagged,
-        mines
+        puzzle.mines
       );
 
     if (solution.solves) solvable.push(seed);

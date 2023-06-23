@@ -31,7 +31,7 @@ export const Solver: FunctionComponent<{}> = () => {
   // For now, hardcoding starting tile as 0
   const startingTile = 0;
 
-  const [mines, neighbors] = useMemo(
+  const puzzle = useMemo(
     () =>
       genBoard(
         width.value,
@@ -42,27 +42,9 @@ export const Solver: FunctionComponent<{}> = () => {
       ),
     [seed.value, width.value, height.value, mineCount.value]
   );
-  const checked = checkTiles(
-    startingTile,
-    width.value,
-    height.value,
-    [],
-    [],
-    neighbors
-  );
+  const checked = checkTiles(startingTile, puzzle);
 
-  const solution = useMemo(
-    () =>
-      solveBoard(
-        width.value,
-        height.value,
-        mineCount.value,
-        neighbors,
-        checked,
-        []
-      ),
-    [seed.value, width.value, height.value, mineCount.value]
-  );
+  const solution = useMemo(() => solveBoard(puzzle), [puzzle]);
 
   const finalBoard = solution.steps.at(-1);
 
@@ -79,7 +61,9 @@ export const Solver: FunctionComponent<{}> = () => {
       {solution.solves && (
         <div>
           Solution{" "}
-          {isSolutionCorrect(solution, mines) ? "correct" : "INCORRECT!!"}
+          {isSolutionCorrect(solution, puzzle.mines)
+            ? "correct"
+            : "INCORRECT!!"}
         </div>
       )}
       <div className="report">
@@ -109,7 +93,7 @@ export const Solver: FunctionComponent<{}> = () => {
         width={width.value}
         height={height.value}
         checked={checked}
-        neighbors={neighbors}
+        neighbors={puzzle.neighbors}
         flagged={[]}
       />
       {finalBoard && (
@@ -117,7 +101,7 @@ export const Solver: FunctionComponent<{}> = () => {
           width={width.value}
           height={height.value}
           checked={finalBoard.checked}
-          neighbors={neighbors}
+          neighbors={puzzle.neighbors}
           flagged={finalBoard.flagged}
         />
       )}
@@ -126,8 +110,8 @@ export const Solver: FunctionComponent<{}> = () => {
           width={width.value}
           height={height.value}
           checked={range(width.value * height.value)}
-          neighbors={neighbors}
-          flagged={mines}
+          neighbors={puzzle.neighbors}
+          flagged={puzzle.mines}
         />
       )}
     </div>

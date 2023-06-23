@@ -7,12 +7,10 @@ import {
   isProperSubsetOf,
   sumBy,
 } from "../util/array.js";
-import {
-  checkTiles,
-  range,
-  getNeighbors as uGetNeighbors,
-} from "../util/index.js";
+import { range, getNeighbors as uGetNeighbors } from "../util/index.js";
+import { Puzzle } from "../puzzle.js";
 
+// TODO probably janky and should be rewritten
 function* properSubsets(
   width: number,
   height: number,
@@ -66,13 +64,8 @@ function* properSubsets(
   }
 }
 
-export const subsetSolver = (
-  width: number,
-  height: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): CheckResult | false => {
+export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
+  const { width, height, checked, flagged, neighbors } = puzzle;
   // All of the neighbors for a given cell
   const neighborCache = range(width * height).map((t) =>
     uGetNeighbors(t, width, height)
@@ -103,21 +96,9 @@ export const subsetSolver = (
         smaller.flatMap((t) => uncheckedNeighborCache[t])
       );
 
-      let newChecked = checked;
-      for (const tile of safeToCheck) {
-        newChecked = checkTiles(
-          tile,
-          width,
-          height,
-          newChecked,
-          flagged,
-          neighbors
-        );
-      }
-
       return {
-        flagged,
-        checked: newChecked,
+        safeToCheck,
+        safeToFlag: [],
       };
     }
 
@@ -139,8 +120,8 @@ export const subsetSolver = (
       );
 
       return {
-        flagged: flagged.concat(safeToFlag),
-        checked: checked.concat(safeToFlag),
+        safeToCheck: [],
+        safeToFlag,
       };
     }
   }

@@ -55,7 +55,6 @@ export const App: FunctionComponent<{}> = () => {
         />
       );
     case Stage.PreGame:
-      console.log(state.value);
       return (
         <PregameGrid
           width={state.value.width}

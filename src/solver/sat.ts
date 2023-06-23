@@ -3,15 +3,16 @@ import satSolve from "boolean-sat";
 import { CheckResult } from "./index.js";
 import { range, checkTiles, getNeighbors } from "../util/index.js";
 import { Clause, nOf } from "../util/solver.js";
+import { Puzzle } from "../puzzle.js";
 
-const baseClauses = (
-  width: number,
-  height: number,
-  mineCount: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): Array<Clause> => {
+const baseClauses = ({
+  width,
+  height,
+  mineCount,
+  checked,
+  flagged,
+  neighbors,
+}: Puzzle): Array<Clause> => {
   const totalCells = width * height;
   const maxNeighboringMines = 8;
   const valuesPerCell = maxNeighboringMines + 1 + 1;
@@ -57,26 +58,14 @@ const baseClauses = (
   return ret;
 };
 
-export const satSolver = (
-  width: number,
-  height: number,
-  mineCount: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): CheckResult | false => {
+export const satSolver = (puzzle: Puzzle): CheckResult | false => {
+  const { width, height, checked } = puzzle;
+
   const cellFromVar = (satVar: number): number => Math.floor((satVar - 1) / 10);
   const mineFromVar = (satVar: number): number =>
     (cellFromVar(satVar) + 1) * 10;
 
-  const clauses = baseClauses(
-    width,
-    height,
-    mineCount,
-    neighbors,
-    checked,
-    flagged
-  );
+  const clauses = baseClauses(puzzle);
   const solution = satSolve(width * height * 10, clauses);
 
   if (!solution) {
@@ -109,28 +98,17 @@ export const satSolver = (
     if (contradictorySolution) continue;
 
     // No contradictory solution! Return new information gained
-    if (isMine) {
-      const newChecked = [cellFromVar(relevantVar), ...checked];
-      const newFlagged = [cellFromVar(relevantVar), ...flagged];
-
+    if (isMine)
       return {
-        checked: newChecked,
-        flagged: newFlagged,
+        safeToCheck: [],
+        safeToFlag: [cellFromVar(relevantVar)],
       };
-    }
 
-    const newChecked = checkTiles(
-      cellFromVar(relevantVar),
-      width,
-      height,
-      checked,
-      flagged,
-      neighbors
-    );
+    puzzle.checked = checkTiles(cellFromVar(relevantVar), puzzle);
 
     return {
-      checked: newChecked,
-      flagged,
+      safeToCheck: [cellFromVar(relevantVar)],
+      safeToFlag: [],
     };
   }
 

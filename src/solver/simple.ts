@@ -1,6 +1,7 @@
 import { CheckResult } from "./index.js";
-import { checkTiles, getNeighbors } from "../util/index.js";
+import { getNeighbors } from "../util/index.js";
 import { difference, intersection, isSubsetOf } from "../util/array.js";
+import { Puzzle } from "../puzzle.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
 //
@@ -14,13 +15,9 @@ import { difference, intersection, isSubsetOf } from "../util/array.js";
 // NOTE Perf: we call `getNeighbors` a lot in this function, it would probably make sense to cache
 // the results up front for all cells.  This fn takes such a small amount of time relative to the
 // execution of the entire solver I'm not going to bother right now
-export const simpleSolver = (
-  width: number,
-  height: number,
-  neighbors: Array<number>,
-  checked: Array<number>,
-  flagged: Array<number>
-): CheckResult | false => {
+export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
+  const { width, height, checked, flagged, neighbors } = puzzle;
+
   const hasUncheckedNeighbor = (t: number) =>
     !isSubsetOf(getNeighbors(t, width, height), checked);
 
@@ -36,21 +33,11 @@ export const simpleSolver = (
 
   const satiatedCell = boundryCells.find(isSatiated);
 
-  if (satiatedCell) {
-    const newChecked = checkTiles(
-      satiatedCell,
-      width,
-      height,
-      checked,
-      flagged,
-      neighbors
-    );
-
+  if (satiatedCell)
     return {
-      checked: newChecked,
-      flagged,
+      safeToCheck: [satiatedCell],
+      safeToFlag: [],
     };
-  }
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
@@ -66,8 +53,8 @@ export const simpleSolver = (
     );
 
     return {
-      checked: checked.concat(uncheckedNeighbors),
-      flagged: flagged.concat(uncheckedNeighbors),
+      safeToCheck: [],
+      safeToFlag: uncheckedNeighbors,
     };
   }
 

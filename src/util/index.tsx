@@ -1,3 +1,4 @@
+import { Puzzle } from "../puzzle.js";
 import { difference, intersection } from "./array.js";
 
 export const range = (n: number): Array<number> => [...new Array(n).keys()];
@@ -64,11 +65,7 @@ export const getNeighbors = (
 
 export const checkTiles = (
   tile: number,
-  width: number,
-  height: number,
-  checked: Array<number>,
-  flagged: Array<number>,
-  neighbors: Array<number>
+  { width, height, checked, flagged, neighbors }: Puzzle
 ): Array<number> => {
   const go = (tile: number): void => {
     if (newTiles.includes(tile)) return;
