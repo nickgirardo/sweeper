@@ -60,9 +60,9 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
         puzzle.checked = checkTiles(t, puzzle);
       }
 
-      puzzle.checked = union(puzzle.checked, result.safeToFlag);
+      puzzle.checked = puzzle.checked.concat(result.safeToFlag);
 
-      puzzle.flagged = union(puzzle.flagged, result.safeToFlag);
+      puzzle.flagged = puzzle.flagged.concat(result.safeToFlag);
 
       steps.push({
         solver: solverUsed,
