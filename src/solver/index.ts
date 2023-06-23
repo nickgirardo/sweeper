@@ -21,14 +21,13 @@ export enum Solver {
 export interface Solution {
   solves: boolean;
   steps: Array<SolutionStep>;
+  puzzle: Puzzle;
   totalTime: number;
 }
 
 type SolutionStep = {
   stepTime: number;
   solver: Solver;
-  checked: Array<number>;
-  flagged: Array<number>;
 };
 
 export const solveBoard = (puzzle: Puzzle): Solution => {
@@ -68,8 +67,6 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
       steps.push({
         solver: solverUsed,
         stepTime: performance.now() - setpStart,
-        checked: [...puzzle.checked],
-        flagged: [...puzzle.flagged],
       });
 
       continue outer;
@@ -77,8 +74,18 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
 
     // None of our solvers have produced any new information
     // We've failed to solve the puzzle
-    return { solves: false, totalTime: performance.now() - puzzleStart, steps };
+    return {
+      solves: false,
+      puzzle,
+      totalTime: performance.now() - puzzleStart,
+      steps,
+    };
   }
 
-  return { solves: true, totalTime: performance.now() - puzzleStart, steps };
+  return {
+    solves: true,
+    puzzle,
+    totalTime: performance.now() - puzzleStart,
+    steps,
+  };
 };

@@ -45,7 +45,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
       console.log(
         "something went wrong",
         seed,
-        solution.steps.at(-1)!.flagged,
+        solution.puzzle.flagged,
         puzzle.mines
       );
 

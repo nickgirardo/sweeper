@@ -46,7 +46,7 @@ export const Solver: FunctionComponent<{}> = () => {
 
   const solution = useMemo(() => solveBoard(puzzle), [puzzle]);
 
-  const finalBoard = solution.steps.at(-1);
+  const finalBoard = solution.puzzle;
 
   return (
     <div>
