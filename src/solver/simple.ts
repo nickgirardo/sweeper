@@ -1,6 +1,6 @@
 import { CheckResult } from "./index.js";
 import { getNeighbors } from "../util/index.js";
-import { difference, intersection, isSubsetOf } from "../util/array.js";
+import { difference, intersection, isSubsetOf, uniq } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
@@ -15,6 +15,8 @@ import { Puzzle } from "../puzzle.js";
 // NOTE Perf: we call `getNeighbors` a lot in this function, it would probably make sense to cache
 // the results up front for all cells.  This fn takes such a small amount of time relative to the
 // execution of the entire solver I'm not going to bother right now
+//
+// TODO Leave a note regarding why it makes sense to return after isSatiated
 export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
   const { width, height, checked, flagged, neighbors } = puzzle;
 
@@ -31,11 +33,11 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
     neighbors[t] ===
     intersection(getNeighbors(t, width, height), flagged).length;
 
-  const satiatedCell = boundryCells.find(isSatiated);
+  const satiatedCells = boundryCells.filter(isSatiated);
 
-  if (satiatedCell)
+  if (satiatedCells.length)
     return {
-      safeToCheck: [satiatedCell],
+      safeToCheck: satiatedCells,
       safeToFlag: [],
     };
 
@@ -44,17 +46,19 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
     difference(getNeighbors(t, width, height), checked).length ===
     neighbors[t] - intersection(getNeighbors(t, width, height), flagged).length;
 
-  const antiSatiatedCell = boundryCells.find(isAntiSatiated);
+  const antiSatiatedCells = boundryCells.filter(isAntiSatiated);
 
-  if (antiSatiatedCell) {
-    const uncheckedNeighbors = difference(
-      getNeighbors(antiSatiatedCell, width, height),
-      checked
+  if (antiSatiatedCells.length) {
+    const allNeighbors = uniq(
+      antiSatiatedCells.reduce(
+        (acc: Array<number>, b) => acc.concat(getNeighbors(b, width, height)),
+        []
+      )
     );
 
     return {
       safeToCheck: [],
-      safeToFlag: uncheckedNeighbors,
+      safeToFlag: difference(allNeighbors, checked),
     };
   }
 

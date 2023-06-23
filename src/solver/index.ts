@@ -1,10 +1,11 @@
+import { Puzzle } from "../puzzle.js";
+
+import { checkTiles } from "../util/index.js";
+
 import { mineCounterSolver } from "./mineCounter.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
 import { patternSolver } from "./pattern.js";
-import { Puzzle } from "../puzzle.js";
-import { union } from "../util/array.js";
-import { checkTiles } from "../util/index.js";
 
 export type CheckResult = {
   safeToCheck: Array<number>;
