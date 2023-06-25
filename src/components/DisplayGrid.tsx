@@ -7,9 +7,9 @@ import { Tile } from "./Tile.js";
 interface Props {
   width: number;
   height: number;
-  checked: Array<number>;
+  checked: Set<number>;
   neighbors: Array<number>;
-  flagged: Array<number>;
+  flagged: Set<number>;
 }
 
 export const DisplayGrid: FunctionComponent<Props> = ({
@@ -26,9 +26,9 @@ export const DisplayGrid: FunctionComponent<Props> = ({
     {range(width * height).map((n) => (
       <Tile
         neighbors={neighbors[n]}
-        isChecked={checked.includes(n)}
+        isChecked={checked.has(n)}
         isMine={false}
-        isFlagged={flagged.includes(n)}
+        isFlagged={flagged.has(n)}
         handleCheck={() => undefined}
         handleFlag={() => undefined}
       />

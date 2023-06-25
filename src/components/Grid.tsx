@@ -1,12 +1,11 @@
 import { FunctionComponent } from "preact";
 import { useEffect } from "preact/hooks";
-import { Signal, useSignal } from "@preact/signals";
+import { Signal, batch, useSignal } from "@preact/signals";
 
-import { Puzzle, genBoard } from "../puzzle.js";
-import { range, checkTiles, Rand } from "../util/index.js";
+import { Puzzle } from "../puzzle.js";
+import { range, Rand } from "../util/index.js";
 
 import { Tile } from "./Tile.js";
-import { difference } from "../util/array.js";
 
 interface Props {
   width: number;
@@ -21,43 +20,51 @@ const puzzleIsReady = (
 
 export const Grid: FunctionComponent<Props> = (props) => {
   const puzzle = useSignal<Puzzle | null>(null);
+  const checked = useSignal<Set<number>>(new Set());
+  const flagged = useSignal<Set<number>>(new Set());
 
   // Generate grid
   useEffect(() => {
-    let newPuzzle = genBoard(
+    let newPuzzle = new Puzzle(
       props.width,
       props.height,
       props.mineCount,
       props.startingTile,
       new Rand(performance.now())
     );
+    const puzzleState = newPuzzle.dumpState();
 
-    newPuzzle = {
-      ...newPuzzle,
-      checked: checkTiles(props.startingTile, newPuzzle),
-    };
-
-    puzzle.value = newPuzzle;
+    batch(() => {
+      puzzle.value = newPuzzle;
+      checked.value = puzzleState.checked;
+      flagged.value = puzzleState.flagged;
+    });
   }, [props.startingTile]);
 
   const checkTile = (tile: number) => {
     if (!puzzle.value) return;
 
-    puzzle.value = {
-      ...puzzle.value,
-      checked: checkTiles(tile, puzzle.value),
-    };
+    puzzle.value.checkTile(tile);
+    const puzzleState = puzzle.value.dumpState();
+
+    batch(() => {
+      checked.value = puzzleState.checked;
+      flagged.value = puzzleState.flagged;
+    });
   };
 
   const flagTile = (tile: number) => {
-    if (!puzzle.value || puzzle.value.checked.includes(tile)) return;
+    if (!puzzle.value || (checked.value.has(tile) && !flagged.value.has(tile)))
+      return;
 
-    puzzle.value = {
-      ...puzzle.value,
-      flagged: puzzle.value.flagged.includes(tile)
-        ? difference(puzzle.value.flagged, [tile])
-        : [tile, ...puzzle.value.flagged],
-    };
+    puzzle.value.flagTile(tile);
+
+    const puzzleState = puzzle.value.dumpState();
+
+    batch(() => {
+      checked.value = puzzleState.checked;
+      flagged.value = puzzleState.flagged;
+    });
   };
 
   // NOTE not 100% sure why I need to be so specific here in narrowing this type
@@ -71,9 +78,9 @@ export const Grid: FunctionComponent<Props> = (props) => {
       {range(props.width * props.height).map((n) => (
         <Tile
           neighbors={puzzle.value.neighbors[n]}
-          isChecked={puzzle.value.checked.includes(n)}
-          isMine={puzzle.value.mines.includes(n)}
-          isFlagged={puzzle.value.flagged.includes(n)}
+          isChecked={checked.value.has(n)}
+          isMine={puzzle.value.mines.has(n)}
+          isFlagged={flagged.value.has(n)}
           handleCheck={() => checkTile(n)}
           handleFlag={() => flagTile(n)}
         />

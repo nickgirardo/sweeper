@@ -1,15 +1,13 @@
 import { solveBoard } from "./solver/index.js";
-import { genBoard } from "./puzzle.js";
-import { Rand, checkTiles, range } from "./util/index.js";
-
-import { isSolutionCorrect } from "./util/solver.js";
+import { Puzzle } from "./puzzle.js";
+import { Rand, range } from "./util/index.js";
 
 onmessage = (_ev: MessageEvent<any>): void => {
   console.log("worker: starting");
 
-  const width = 16;
+  const width = 30;
   const height = 16;
-  const mineCount = 40;
+  const mineCount = 99;
   const startingTile = 0;
 
   const solvable: Array<number> = [];
@@ -24,7 +22,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
   for (const seed of range(1000)) {
     if (seed % 50 === 0) console.log(seed);
-    const puzzle = genBoard(
+    const puzzle = new Puzzle(
       width,
       height,
       mineCount,
@@ -32,7 +30,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
       new Rand(seed)
     );
 
-    puzzle.checked = checkTiles(startingTile, puzzle);
+    puzzle.checkTile(startingTile);
     const solution = solveBoard(puzzle);
 
     if (solution.solves) {
@@ -41,7 +39,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
       }
     }
 
-    if (solution.solves && !isSolutionCorrect(solution, puzzle.mines))
+    if (solution.solves && !puzzle.checkSolution(solution))
       console.log(
         "something went wrong",
         seed,

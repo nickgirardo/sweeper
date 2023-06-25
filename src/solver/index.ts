@@ -1,7 +1,5 @@
 import { Puzzle } from "../puzzle.js";
 
-import { checkTiles } from "../util/index.js";
-
 import { mineCounterSolver } from "./mineCounter.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
@@ -37,7 +35,7 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
   const puzzleStart = performance.now();
   const steps: Array<SolutionStep> = [];
 
-  const puzzleComplete = () => puzzle.checked.length === width * height;
+  const puzzleComplete = () => puzzle.checked.size === width * height;
 
   const solvers: Array<[(p: Puzzle) => CheckResult | false, Solver]> = [
     [simpleSolver, Solver.Simple],
@@ -55,15 +53,10 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
       if (!result) continue;
 
       if (result.safeToCheck.length === 0 && result.safeToFlag.length === 0)
-        throw new Error("no change :(");
+        continue;
 
-      for (const t of result.safeToCheck) {
-        puzzle.checked = checkTiles(t, puzzle);
-      }
-
-      puzzle.checked = puzzle.checked.concat(result.safeToFlag);
-
-      puzzle.flagged = puzzle.flagged.concat(result.safeToFlag);
+      // TODO Perf: coalesce these changes
+      puzzle.updatePuzzle(result.safeToCheck, result.safeToFlag);
 
       steps.push({
         solver: solverUsed,

@@ -1,7 +1,7 @@
 import satSolve from "boolean-sat";
 
 import { CheckResult } from "./index.js";
-import { range, checkTiles, getNeighbors } from "../util/index.js";
+import { range } from "../util/index.js";
 import { Clause, nOf } from "../util/solver.js";
 import { Puzzle } from "../puzzle.js";
 
@@ -12,6 +12,7 @@ const baseClauses = ({
   checked,
   flagged,
   neighbors,
+  neighboringCells,
 }: Puzzle): Array<Clause> => {
   const totalCells = width * height;
   const maxNeighboringMines = 8;
@@ -39,7 +40,7 @@ const baseClauses = ({
 
   for (const t of checked) {
     // Checked cells have a known value
-    if (flagged.includes(t)) continue;
+    if (flagged.has(t)) continue;
 
     ret.push([t * valuesPerCell + neighbors[t] + 1]);
 
@@ -47,7 +48,7 @@ const baseClauses = ({
     ret = ret.concat(
       nOf(
         neighbors[t],
-        getNeighbors(t, width, height).map((t) => mines[t])
+        Array.from(neighboringCells[t]).map((t) => mines[t])
       )
     );
   }
@@ -77,7 +78,7 @@ export const satSolver = (puzzle: Puzzle): CheckResult | false => {
   const newDecisions = Object.entries(solution)
     .filter(([_, val]) => Boolean(val))
     .map(([key, _]) => Number(key))
-    .filter((val) => !checked.includes(cellFromVar(val)));
+    .filter((val) => !checked.has(cellFromVar(val)));
 
   for (const relevantVar of newDecisions) {
     const isMine = !Boolean(relevantVar % 10);
@@ -104,7 +105,7 @@ export const satSolver = (puzzle: Puzzle): CheckResult | false => {
         safeToFlag: [cellFromVar(relevantVar)],
       };
 
-    puzzle.checked = checkTiles(cellFromVar(relevantVar), puzzle);
+    puzzle.checkTile(cellFromVar(relevantVar));
 
     return {
       safeToCheck: [cellFromVar(relevantVar)],

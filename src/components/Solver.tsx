@@ -4,13 +4,12 @@ import { Signal, signal } from "@preact/signals";
 import { useMemo } from "preact/hooks";
 
 import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
-import { Rand, checkTiles, range } from "../util/index.js";
-import { genBoard } from "../puzzle.js";
+import { Rand, range } from "../util/index.js";
+import { Puzzle } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
-import { isSolutionCorrect } from "../util/solver.js";
 
-const seed = signal<number>(20);
+const seed = signal<number>(5);
 const width = signal<number>(16);
 const height = signal<number>(16);
 const mineCount = signal<number>(40);
@@ -31,20 +30,27 @@ export const Solver: FunctionComponent<{}> = () => {
   // For now, hardcoding starting tile as 0
   const startingTile = 0;
 
-  const puzzle = useMemo(
-    () =>
-      genBoard(
+  const [initialPuzzle, puzzle] = useMemo(
+    () => [
+      new Puzzle(
         width.value,
         height.value,
         mineCount.value,
         startingTile,
         new Rand(seed.value)
       ),
+      new Puzzle(
+        width.value,
+        height.value,
+        mineCount.value,
+        startingTile,
+        new Rand(seed.value)
+      ),
+    ],
     [seed.value, width.value, height.value, mineCount.value]
   );
-  const checked = checkTiles(startingTile, puzzle);
 
-  const solution = useMemo(() => solveBoard(puzzle), [puzzle]);
+  const solution = useMemo(() => solveBoard(puzzle), [initialPuzzle]);
 
   const finalBoard = solution.puzzle;
 
@@ -61,9 +67,7 @@ export const Solver: FunctionComponent<{}> = () => {
       {solution.solves && (
         <div>
           Solution{" "}
-          {isSolutionCorrect(solution, puzzle.mines)
-            ? "correct"
-            : "INCORRECT!!"}
+          {initialPuzzle.checkSolution(solution) ? "correct" : "INCORRECT!!"}
         </div>
       )}
       <div className="report">
@@ -92,26 +96,24 @@ export const Solver: FunctionComponent<{}> = () => {
       <DisplayGrid
         width={width.value}
         height={height.value}
-        checked={checked}
-        neighbors={puzzle.neighbors}
-        flagged={[]}
+        checked={initialPuzzle.checked}
+        neighbors={initialPuzzle.neighbors}
+        flagged={new Set()}
+      />
+      <DisplayGrid
+        width={width.value}
+        height={height.value}
+        checked={new Set(range(width.value * height.value))}
+        neighbors={initialPuzzle.neighbors}
+        flagged={initialPuzzle.mines}
       />
       {finalBoard && (
         <DisplayGrid
           width={width.value}
           height={height.value}
           checked={finalBoard.checked}
-          neighbors={puzzle.neighbors}
+          neighbors={finalBoard.neighbors}
           flagged={finalBoard.flagged}
-        />
-      )}
-      {!solution.solves && (
-        <DisplayGrid
-          width={width.value}
-          height={height.value}
-          checked={range(width.value * height.value)}
-          neighbors={puzzle.neighbors}
-          flagged={puzzle.mines}
         />
       )}
     </div>

@@ -3,44 +3,46 @@ import { CheckResult } from "./index.js";
 import {
   areMutuallyExclusive,
   difference,
-  intersection,
   isProperSubsetOf,
+  setDifference,
+  setIntersection,
   sumBy,
 } from "../util/array.js";
-import { range, getNeighbors as uGetNeighbors } from "../util/index.js";
+import { range } from "../util/index.js";
 import { Puzzle } from "../puzzle.js";
 
 // TODO probably janky and should be rewritten
 function* properSubsets(
   width: number,
   height: number,
-  checked: Array<number>,
-  flagged: Array<number>
+  neighboringCells: Array<Set<number>>,
+  boundryCells: Set<number>,
+  checked: Set<number>
 ): Generator<[Array<number>, Array<number>]> {
   // All of the neighbors for a given cell which are unchecked
-  const neighborCache = range(width * height).map((t) =>
-    difference(uGetNeighbors(t, width, height), checked)
-  );
-
-  const hasUncheckedNeighbor = (t: number) => neighborCache[t].length > 0;
-
-  const boundryCells = difference(
-    checked.filter(hasUncheckedNeighbor),
-    flagged
+  // TODO Seems like a very expensive computation
+  const uncheckedNeighboringCells = range(width * height).map((t) =>
+    setDifference(neighboringCells[t], checked)
   );
 
   // Ascending order based on number of neighbors
   // NOTE Sorting here means we don't have to iterate over cells which have fewer neighbors than that
   // cell.  This might actually be slower than just iterating over all of the cells and exiting early
-  const sortedBoundryCells = boundryCells.sort(
-    (a, b) => neighborCache[a].length - neighborCache[b].length
+  const sortedBoundryCells = Array.from(boundryCells).sort(
+    (a, b) =>
+      uncheckedNeighboringCells[a].size - uncheckedNeighboringCells[b].size
   );
 
   for (const [ix, smaller] of sortedBoundryCells.entries()) {
     const otherCells = sortedBoundryCells.slice(ix + 1);
 
     for (const larger of otherCells) {
-      if (isProperSubsetOf(neighborCache[smaller], neighborCache[larger]))
+      if (
+        isProperSubsetOf(
+          uncheckedNeighboringCells[smaller],
+          uncheckedNeighboringCells[larger]
+        )
+      )
         yield [[smaller], [larger]];
     }
   }
@@ -49,15 +51,24 @@ function* properSubsets(
     const otherCells = sortedBoundryCells.slice(ix + 1);
 
     for (const other of otherCells) {
-      if (!areMutuallyExclusive(neighborCache[cell], neighborCache[other]))
+      if (
+        !areMutuallyExclusive(
+          uncheckedNeighboringCells[cell],
+          uncheckedNeighboringCells[other]
+        )
+      )
         continue;
 
-      const union = neighborCache[cell].concat(neighborCache[other]);
+      // TODO might be a faster way to merge
+      const union = new Set([
+        ...uncheckedNeighboringCells[cell],
+        ...uncheckedNeighboringCells[other],
+      ]);
 
       for (const c of sortedBoundryCells) {
         if (c === cell || c === other) continue;
 
-        if (isProperSubsetOf(union, neighborCache[c]))
+        if (isProperSubsetOf(union, uncheckedNeighboringCells[c]))
           yield [[cell, other], [c]];
       }
     }
@@ -65,24 +76,28 @@ function* properSubsets(
 }
 
 export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
-  const { width, height, checked, flagged, neighbors } = puzzle;
-  // All of the neighbors for a given cell
-  const neighborCache = range(width * height).map((t) =>
-    uGetNeighbors(t, width, height)
-  );
-
-  const uncheckedNeighborCache = neighborCache.map((t) =>
-    difference(t, checked)
+  const {
+    width,
+    height,
+    checked,
+    flagged,
+    neighbors,
+    neighboringCells,
+    boundryCells,
+  } = puzzle;
+  const uncheckedNeighboringCells = neighboringCells.map((t) =>
+    setDifference(t, checked)
   );
 
   const unflaggedNeighboringMines = (t: number): number =>
-    neighbors[t] - intersection(neighborCache[t], flagged).length;
+    neighbors[t] - setIntersection(neighboringCells[t], flagged).size;
 
   for (const [smaller, larger] of properSubsets(
     width,
     height,
-    checked,
-    flagged
+    neighboringCells,
+    boundryCells,
+    checked
   )) {
     // If the two sets have the same amount of mines that have not been flagged
     // Every cell which is in the larger but not the smaller is not a mine and can be
@@ -92,12 +107,12 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
       sumBy(larger, unflaggedNeighboringMines)
     ) {
       const safeToCheck = difference(
-        larger.flatMap((t) => uncheckedNeighborCache[t]),
-        smaller.flatMap((t) => uncheckedNeighborCache[t])
+        larger.flatMap((t) => Array.from(uncheckedNeighboringCells[t])),
+        smaller.flatMap((t) => Array.from(uncheckedNeighboringCells[t]))
       );
 
       return {
-        safeToCheck,
+        safeToCheck: safeToCheck,
         safeToFlag: [],
       };
     }
@@ -106,8 +121,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     // between the number of neighboring cells, every cell neighboring the larger but not the smaller
     // is a mine and can be flagged
     const sizeDifference =
-      sumBy(larger, (t) => uncheckedNeighborCache[t].length) -
-      sumBy(smaller, (t) => uncheckedNeighborCache[t].length);
+      sumBy(larger, (t) => uncheckedNeighboringCells[t].size) -
+      sumBy(smaller, (t) => uncheckedNeighboringCells[t].size);
 
     const mineDifference =
       sumBy(larger, unflaggedNeighboringMines) -
@@ -115,8 +130,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
 
     if (sizeDifference === mineDifference) {
       const safeToFlag = difference(
-        larger.flatMap((t) => uncheckedNeighborCache[t]),
-        smaller.flatMap((t) => uncheckedNeighborCache[t])
+        larger.flatMap((t) => Array.from(uncheckedNeighboringCells[t])),
+        smaller.flatMap((t) => Array.from(uncheckedNeighboringCells[t]))
       );
 
       return {

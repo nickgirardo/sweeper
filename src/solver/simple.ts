@@ -1,6 +1,5 @@
 import { CheckResult } from "./index.js";
-import { getNeighbors } from "../util/index.js";
-import { difference, intersection, isSubsetOf, uniq } from "../util/array.js";
+import { setDifference, setIntersection } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
@@ -12,28 +11,16 @@ import { Puzzle } from "../puzzle.js";
 // This solver is not able to complete most boards on its own and is intended as a complement
 // to the more thorough but significantly slower satSolver
 //
-// NOTE Perf: we call `getNeighbors` a lot in this function, it would probably make sense to cache
-// the results up front for all cells.  This fn takes such a small amount of time relative to the
-// execution of the entire solver I'm not going to bother right now
-//
 // TODO Leave a note regarding why it makes sense to return after isSatiated
 export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
-  const { width, height, checked, flagged, neighbors } = puzzle;
-
-  const hasUncheckedNeighbor = (t: number) =>
-    !isSubsetOf(getNeighbors(t, width, height), checked);
-
-  const boundryCells = difference(
-    checked.filter(hasUncheckedNeighbor),
-    flagged
-  );
+  const { checked, flagged, neighbors, neighboringCells, boundryCells } =
+    puzzle;
 
   // isSatiated: are all of the tiles neighboring mines flagged already?
   const isSatiated = (t: number) =>
-    neighbors[t] ===
-    intersection(getNeighbors(t, width, height), flagged).length;
+    neighbors[t] === setIntersection(neighboringCells[t], flagged).size;
 
-  const satiatedCells = boundryCells.filter(isSatiated);
+  const satiatedCells = Array.from(boundryCells).filter(isSatiated);
 
   if (satiatedCells.length)
     return {
@@ -43,22 +30,21 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
-    difference(getNeighbors(t, width, height), checked).length ===
-    neighbors[t] - intersection(getNeighbors(t, width, height), flagged).length;
+    setDifference(neighboringCells[t], checked).size ===
+    neighbors[t] - setIntersection(neighboringCells[t], flagged).size;
 
-  const antiSatiatedCells = boundryCells.filter(isAntiSatiated);
+  const antiSatiatedCells = Array.from(boundryCells).filter(isAntiSatiated);
 
   if (antiSatiatedCells.length) {
-    const allNeighbors = uniq(
-      antiSatiatedCells.reduce(
-        (acc: Array<number>, b) => acc.concat(getNeighbors(b, width, height)),
-        []
-      )
-    );
+    const allNeighbors = new Set<number>();
+    for (const t of antiSatiatedCells) {
+      neighboringCells[t].forEach((b) => allNeighbors.add(b));
+    }
 
+    // TODO might want to return sets instead of arrays
     return {
       safeToCheck: [],
-      safeToFlag: difference(allNeighbors, checked),
+      safeToFlag: Array.from(setDifference(allNeighbors, checked)),
     };
   }
 

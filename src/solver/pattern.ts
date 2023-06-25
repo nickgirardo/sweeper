@@ -1,75 +1,73 @@
 import { CheckResult } from "./index.js";
 
-import { difference, intersection, union } from "../util/array.js";
-import { range, getNeighbors as uGetNeighbors } from "../util/index.js";
+import {
+  intersection,
+  setDifference,
+  setIntersection,
+  union,
+} from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // TODO explain why
 // TODO explain why not higher patterns like 13231
 export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
-  const { width, height, checked, flagged, neighbors } = puzzle;
-  // All of the neighbors for a given cell
-  const neighborCache = range(width * height).map((t) =>
-    uGetNeighbors(t, width, height)
-  );
+  const {
+    width,
+    height,
+    checked,
+    flagged,
+    neighbors,
+    neighboringCells,
+    boundryCells,
+  } = puzzle;
 
-  const uncheckedNeighborCache = neighborCache.map((t) =>
-    difference(t, checked)
+  const uncheckedNeighboringCells = neighboringCells.map((t) =>
+    setDifference(t, checked)
   );
 
   const neighboringMineCount = (t: number): number =>
-    neighbors[t] - intersection(neighborCache[t], flagged).length;
-
-  const hasUncheckedNeighbor = (t: number) =>
-    uncheckedNeighborCache[t].length > 0;
-
-  const boundryCells = difference(
-    checked.filter(hasUncheckedNeighbor),
-    flagged
-  );
+    neighbors[t] - setIntersection(neighboringCells[t], flagged).size;
 
   // 1-2-1 Patterns
   const checkHorizontal121 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
     t % width < width - 2 &&
-    boundryCells.includes(t + 1) &&
+    boundryCells.has(t + 1) &&
     neighboringMineCount(t + 1) === 2 &&
-    boundryCells.includes(t + 2) &&
+    boundryCells.has(t + 2) &&
     neighboringMineCount(t + 2) === 1;
 
   const checkVertical121 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
     t < width * (height - 2) &&
-    boundryCells.includes(t + width) &&
+    boundryCells.has(t + width) &&
     neighboringMineCount(t + width) === 2 &&
-    boundryCells.includes(t + 2 * width) &&
+    boundryCells.has(t + 2 * width) &&
     neighboringMineCount(t + 2 * width) === 1;
 
   // 1-2-2-1 Patterns
   const checkHorizontal1221 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
     t % width < width - 3 &&
-    boundryCells.includes(t + 1) &&
+    boundryCells.has(t + 1) &&
     neighboringMineCount(t + 1) === 2 &&
-    boundryCells.includes(t + 2) &&
+    boundryCells.has(t + 2) &&
     neighboringMineCount(t + 2) === 2 &&
-    boundryCells.includes(t + 3) &&
+    boundryCells.has(t + 3) &&
     neighboringMineCount(t + 3) === 1;
 
   const checkVertical1221 = (t: number): boolean =>
     neighboringMineCount(t) === 1 &&
     t < width * (height - 3) &&
-    boundryCells.includes(t + width) &&
+    boundryCells.has(t + width) &&
     neighboringMineCount(t + width) === 2 &&
-    boundryCells.includes(t + 2 * width) &&
+    boundryCells.has(t + 2 * width) &&
     neighboringMineCount(t + 2 * width) === 2 &&
-    boundryCells.includes(t + 3 * width) &&
+    boundryCells.has(t + 3 * width) &&
     neighboringMineCount(t + 3 * width) === 1;
 
   // Look for patterns
-  // NOTE Regarding the slice: the last two cells cannot possible be the start of a pattern
-  // as patterns have a minimum length of 3
-  for (const t of boundryCells.slice(0, -2)) {
+  for (const t of boundryCells) {
     let safeToCheck: Array<number> = [];
     // Look for horizontal 1-2-1 pattern
     if (checkHorizontal121(t)) {
@@ -84,7 +82,10 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
           t + width + 1,
           t + width + 3,
         ],
-        union(uncheckedNeighborCache[t], uncheckedNeighborCache[t + 2])
+        union(
+          Array.from(uncheckedNeighboringCells[t]),
+          Array.from(uncheckedNeighboringCells[t + 2])
+        )
       );
     } else if (checkVertical121(t)) {
       // Look for vertical 1-2-1 pattern
@@ -99,7 +100,10 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
           t + 3 * width,
           t + 3 * width + 1,
         ],
-        union(uncheckedNeighborCache[t], uncheckedNeighborCache[t + 2 * width])
+        union(
+          Array.from(uncheckedNeighboringCells[t]),
+          Array.from(uncheckedNeighboringCells[t + 2 * width])
+        )
       );
     } else if (checkHorizontal1221(t)) {
       safeToCheck = intersection(
@@ -117,7 +121,9 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
         ],
         // NOTE concat can be used here instead of union as the cells cannot have overlap
         // This just saves on calling uniq on the array
-        uncheckedNeighborCache[t].concat(uncheckedNeighborCache[t + 3])
+        Array.from(uncheckedNeighboringCells[t]).concat(
+          Array.from(uncheckedNeighboringCells[t + 3])
+        )
       );
     } else if (checkVertical1221(t)) {
       // Look for vertical 1-2-1 pattern
@@ -134,7 +140,9 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
           t + 4 * width,
           t + 4 * width + 1,
         ],
-        uncheckedNeighborCache[t].concat(uncheckedNeighborCache[t + 3 * width])
+        Array.from(uncheckedNeighboringCells[t]).concat(
+          Array.from(uncheckedNeighboringCells[t + 3 * width])
+        )
       );
     }
 
