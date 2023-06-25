@@ -12,8 +12,7 @@ export class Puzzle {
   height: number;
   mineCount: number;
   neighbors: Array<number>;
-  // TODO
-  // remainingNeighbors: Array<number>;
+  remainingNeighbors: Array<number>;
   mines: Set<number>;
   flagged: Set<number>;
   checked: Set<number>;
@@ -56,6 +55,8 @@ export class Puzzle {
     for (const mine of this.mines) {
       this.neighboringCells[mine].forEach((tile) => this.neighbors[tile]++);
     }
+
+    this.remainingNeighbors = [...this.neighbors];
 
     this.checkTile(startingTile);
   }
@@ -123,10 +124,12 @@ export class Puzzle {
       // Remove the tile from the flagged and checked lists
       this.flagged.delete(tile);
       this.checked.delete(tile);
+      this.neighboringCells[tile].forEach((t) => this.remainingNeighbors[t]++);
     } else {
       // Add the tile to flagged and checked lists
       this.checked.add(tile);
       this.flagged.add(tile);
+      this.neighboringCells[tile].forEach((t) => this.remainingNeighbors[t]--);
     }
   }
 

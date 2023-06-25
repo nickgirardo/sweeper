@@ -1,5 +1,5 @@
 import { CheckResult } from "./index.js";
-import { setDifference, setIntersection } from "../util/array.js";
+import { setDifference } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
@@ -13,12 +13,11 @@ import { Puzzle } from "../puzzle.js";
 //
 // TODO Leave a note regarding why it makes sense to return after isSatiated
 export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
-  const { checked, flagged, neighbors, neighboringCells, boundryCells } =
+  const { checked, neighboringCells, boundryCells, remainingNeighbors } =
     puzzle;
 
   // isSatiated: are all of the tiles neighboring mines flagged already?
-  const isSatiated = (t: number) =>
-    neighbors[t] === setIntersection(neighboringCells[t], flagged).size;
+  const isSatiated = (t: number) => remainingNeighbors[t] === 0;
 
   const satiatedCells = Array.from(boundryCells).filter(isSatiated);
 
@@ -30,8 +29,7 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
-    setDifference(neighboringCells[t], checked).size ===
-    neighbors[t] - setIntersection(neighboringCells[t], flagged).size;
+    setDifference(neighboringCells[t], checked).size === remainingNeighbors[t];
 
   const antiSatiatedCells = Array.from(boundryCells).filter(isAntiSatiated);
 

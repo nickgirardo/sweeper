@@ -80,17 +80,13 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     width,
     height,
     checked,
-    flagged,
-    neighbors,
     neighboringCells,
     boundryCells,
+    remainingNeighbors,
   } = puzzle;
   const uncheckedNeighboringCells = neighboringCells.map((t) =>
     setDifference(t, checked)
   );
-
-  const unflaggedNeighboringMines = (t: number): number =>
-    neighbors[t] - setIntersection(neighboringCells[t], flagged).size;
 
   for (const [smaller, larger] of properSubsets(
     width,
@@ -103,8 +99,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     // Every cell which is in the larger but not the smaller is not a mine and can be
     // checked
     if (
-      sumBy(smaller, unflaggedNeighboringMines) ===
-      sumBy(larger, unflaggedNeighboringMines)
+      sumBy(smaller, (t) => remainingNeighbors[t]) ===
+      sumBy(larger, (t) => remainingNeighbors[t])
     ) {
       const safeToCheck = difference(
         larger.flatMap((t) => Array.from(uncheckedNeighboringCells[t])),
@@ -125,8 +121,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
       sumBy(smaller, (t) => uncheckedNeighboringCells[t].size);
 
     const mineDifference =
-      sumBy(larger, unflaggedNeighboringMines) -
-      sumBy(smaller, unflaggedNeighboringMines);
+      sumBy(larger, (t) => remainingNeighbors[t]) -
+      sumBy(smaller, (t) => remainingNeighbors[t]);
 
     if (sizeDifference === mineDifference) {
       const safeToFlag = difference(
