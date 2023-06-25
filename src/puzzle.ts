@@ -8,14 +8,14 @@ export interface PuzzleState {
 }
 
 export class Puzzle {
-  width: number;
-  height: number;
-  mineCount: number;
-  neighbors: Array<number>;
-  remainingNeighbors: Array<number>;
-  mines: Set<number>;
-  flagged: Set<number>;
-  checked: Set<number>;
+  readonly width: number;
+  readonly height: number;
+  readonly mineCount: number;
+  readonly neighbors: Array<number>;
+  readonly remainingNeighbors: Array<number>;
+  readonly mines: Set<number>;
+  readonly flagged: Set<number>;
+  readonly checked: Set<number>;
 
   neighboringCells: Array<Set<number>>;
   boundryCells: Set<number>;

@@ -5,7 +5,6 @@ import {
   difference,
   isProperSubsetOf,
   setDifference,
-  setIntersection,
   sumBy,
 } from "../util/array.js";
 import { range } from "../util/index.js";
