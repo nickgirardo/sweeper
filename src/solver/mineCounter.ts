@@ -26,6 +26,7 @@ function* boundrySubsequences(
   for (const cells of subsetsOfMaxLength(boundryCells, maxSubsequenceSize)) {
     if (cells.length > maxSubsequenceSize) continue;
 
+    // NOTE joining the sets in this way is very slow
     const neighbors = cells.flatMap((t) => Array.from(cache[t]));
     if (!isUniq(neighbors)) continue;
 
@@ -43,6 +44,7 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
     neighbors,
     neighboringCells,
     boundryCells,
+    remainingNeighbors,
   } = puzzle;
   const foundCount = flagged.size;
   const leftToFind = mineCount - foundCount;
@@ -66,14 +68,7 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
     neighboringCells,
     boundryCells
   )) {
-    // TODO cache this on puzzle probably
-    const flaggedNeighboringMineCount = (t: number) =>
-      setIntersection(neighboringCells[t], flagged).size;
-
-    const neighboringMineCount = sumBy(
-      cells,
-      (t) => neighbors[t] - flaggedNeighboringMineCount(t)
-    );
+    const neighboringMineCount = sumBy(cells, (t) => remainingNeighbors[t]);
 
     if (neighboringMineCount === leftToFind) {
       const neighborsOfGroup = cells.flatMap((t) =>
