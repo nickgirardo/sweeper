@@ -72,7 +72,11 @@ export class Puzzle {
     for (const t of safeToCheck) this.#checkTileNoUpdate(t);
     for (const t of safeToFlag) this.#flagTileNoUpdate(t);
 
-    this.#updateBoundryCacheFull();
+    if (safeToCheck.length === 0) {
+      safeToFlag.forEach((t) => this.#updateBoundryCachePartial(t));
+    } else {
+      this.#updateBoundryCacheFull();
+    }
   }
 
   // TODO update boundry cache after running
@@ -116,7 +120,7 @@ export class Puzzle {
   // NOTE this fn actually toggles the flagged state of a given tile
   flagTile(tile: number): void {
     this.#flagTileNoUpdate(tile);
-    this.#updateBoundryCacheFull();
+    this.#updateBoundryCachePartial(tile);
   }
 
   #flagTileNoUpdate(tile: number): void {
@@ -147,6 +151,28 @@ export class Puzzle {
       if (!setEvery(this.neighboringCells[t], (c) => this.checked.has(c)))
         this.boundryCells.add(t);
     }
+  }
+
+  // NOTE tile is the cell which has changed
+  // the cells which might be changed are itself and the checked, unflagged neighbors
+  #updateBoundryCachePartial(tile: number): void {
+    const tilesToUpdate = setIntersection(
+      setDifference(this.neighboringCells[tile], this.flagged),
+      this.checked
+    );
+
+    const update = (t: number): void => {
+      if (!setEvery(this.neighboringCells[t], (c) => this.checked.has(c))) {
+        this.boundryCells.add(t);
+      } else {
+        this.boundryCells.delete(t);
+      }
+    };
+
+    // TODO without the checks here I solve more puzzles. Look into why that is
+    if (this.checked.has(tile) && !this.flagged.has(tile)) update(tile);
+
+    for (const t of tilesToUpdate) update(t);
   }
 
   // Get ids of all neighboring tiles to a given tile
