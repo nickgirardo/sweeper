@@ -39,8 +39,8 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
 
   const solvers: Array<[(p: Puzzle) => CheckResult | false, Solver]> = [
     [simpleSolver, Solver.Simple],
-    [subsetSolver, Solver.Subset],
     [patternSolver, Solver.Pattern],
+    [subsetSolver, Solver.Subset],
     [mineCounterSolver, Solver.MineCounter],
   ];
 

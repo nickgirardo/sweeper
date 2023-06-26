@@ -15,8 +15,8 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
   const stepCounts = {
     simple: 0,
-    subset: 0,
     pattern: 0,
+    subset: 0,
     "mine-counter": 0,
   };
 
