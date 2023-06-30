@@ -32,13 +32,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
     );
 
     puzzle.checkTile(startingTile);
-    let solution;
-    try {
-      solution = solveBoard(puzzle);
-    } catch (err) {
-      console.log(seed, err);
-      continue;
-    }
+    const solution = solveBoard(puzzle);
 
     if (solution.solves) {
       for (const step of solution.steps) {
