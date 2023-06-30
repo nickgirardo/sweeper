@@ -5,9 +5,9 @@ import { Rand, range } from "./util/index.js";
 onmessage = (_ev: MessageEvent<any>): void => {
   console.log("worker: starting");
 
-  const width = 16;
+  const width = 30;
   const height = 16;
-  const mineCount = 40;
+  const mineCount = 99;
   const startingTile = 0;
 
   const solvable: Array<number> = [];
@@ -18,6 +18,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
     pattern: 0,
     subset: 0,
     "mine-counter": 0,
+    "border-sat": 0,
   };
 
   for (const seed of range(1000)) {
@@ -31,7 +32,13 @@ onmessage = (_ev: MessageEvent<any>): void => {
     );
 
     puzzle.checkTile(startingTile);
-    const solution = solveBoard(puzzle);
+    let solution;
+    try {
+      solution = solveBoard(puzzle);
+    } catch (err) {
+      console.log(seed, err);
+      continue;
+    }
 
     if (solution.solves) {
       for (const step of solution.steps) {

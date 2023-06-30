@@ -9,10 +9,10 @@ import { Puzzle } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 
-const seed = signal<number>(5);
-const width = signal<number>(16);
+const seed = signal<number>(0);
+const width = signal<number>(30);
 const height = signal<number>(16);
-const mineCount = signal<number>(40);
+const mineCount = signal<number>(99);
 
 export const ValueAdjustor: FunctionComponent<{
   label: string;
@@ -74,21 +74,28 @@ export const Solver: FunctionComponent<{}> = () => {
         <div>Total time: {solution.totalTime}ms</div>
         <div>Total steps: {solution.steps.length}</div>
         <div>
-          Simple stpes:{" "}
+          Simple steps:{" "}
           {solution.steps.filter((s) => s.solver === SolverUsed.Simple).length}
         </div>
         <div>
-          Subset stpes:{" "}
+          Subset steps:{" "}
           {solution.steps.filter((s) => s.solver === SolverUsed.Subset).length}
         </div>
         <div>
-          Pattern stpes:{" "}
+          Pattern steps:{" "}
           {solution.steps.filter((s) => s.solver === SolverUsed.Pattern).length}
         </div>
         <div>
-          Mine counter stpes:{" "}
+          Mine counter steps:{" "}
           {
             solution.steps.filter((s) => s.solver === SolverUsed.MineCounter)
+              .length
+          }
+        </div>
+        <div>
+          Border SAT steps:{" "}
+          {
+            solution.steps.filter((s) => s.solver === SolverUsed.BorderSat)
               .length
           }
         </div>
@@ -100,13 +107,6 @@ export const Solver: FunctionComponent<{}> = () => {
         neighbors={initialPuzzle.neighbors}
         flagged={new Set()}
       />
-      <DisplayGrid
-        width={width.value}
-        height={height.value}
-        checked={new Set(range(width.value * height.value))}
-        neighbors={initialPuzzle.neighbors}
-        flagged={initialPuzzle.mines}
-      />
       {finalBoard && (
         <DisplayGrid
           width={width.value}
@@ -116,6 +116,13 @@ export const Solver: FunctionComponent<{}> = () => {
           flagged={finalBoard.flagged}
         />
       )}
+      <DisplayGrid
+        width={width.value}
+        height={height.value}
+        checked={new Set(range(width.value * height.value))}
+        neighbors={initialPuzzle.neighbors}
+        flagged={initialPuzzle.mines}
+      />
     </div>
   );
 };

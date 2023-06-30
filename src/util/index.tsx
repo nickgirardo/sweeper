@@ -14,10 +14,9 @@ export class Rand {
   z: number;
 
   constructor(seed: number) {
-    // NOTE the 0.1 and -0.1 constants are to avoid setting all of the inital seeds to 0
-    this.x = Math.floor((171 * (seed + 0.1)) % 30269);
-    this.y = Math.floor((172 * (seed - 0.1)) % 30307);
-    this.z = Math.floor((170 * (seed + 0.1)) % 30323);
+    this.x = (171 * seed) % 30269;
+    this.y = (172 * (seed + 1)) % 30307;
+    this.z = (170 * (seed + 2)) % 30323;
   }
 
   next(): number {

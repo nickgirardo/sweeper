@@ -4,6 +4,7 @@ import { mineCounterSolver } from "./mineCounter.js";
 import { simpleSolver } from "./simple.js";
 import { subsetSolver } from "./subset.js";
 import { patternSolver } from "./pattern.js";
+import { borderSatSolver } from "./border-sat.js";
 
 export type CheckResult = {
   safeToCheck: Array<number>;
@@ -15,6 +16,7 @@ export enum Solver {
   Subset = "subset",
   Pattern = "pattern",
   MineCounter = "mine-counter",
+  BorderSat = "border-sat",
 }
 
 export interface Solution {
@@ -42,6 +44,7 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
     [patternSolver, Solver.Pattern],
     [subsetSolver, Solver.Subset],
     [mineCounterSolver, Solver.MineCounter],
+    [borderSatSolver, Solver.BorderSat],
   ];
 
   outer: while (!puzzleComplete()) {
