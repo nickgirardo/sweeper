@@ -69,11 +69,14 @@ export class Puzzle {
   }
 
   updatePuzzle(safeToCheck: Array<number>, safeToFlag: Array<number>): void {
+    const beforeSize = this.checked.size;
     for (const t of safeToCheck) this.#checkTileNoUpdate(t);
     for (const t of safeToFlag) this.#flagTileNoUpdate(t);
+    const newlyChecked = this.checked.size - beforeSize;
 
-    if (safeToCheck.length === 0) {
+    if (newlyChecked === safeToCheck.length + safeToFlag.length) {
       safeToFlag.forEach((t) => this.#updateBoundryCachePartial(t));
+      safeToCheck.forEach((t) => this.#updateBoundryCachePartial(t));
     } else {
       this.#updateBoundryCacheFull();
     }
