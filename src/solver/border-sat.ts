@@ -57,6 +57,8 @@ const boundryClauses = (puzzle: Puzzle): [Array<Clause>, Translator] => {
 };
 
 export const borderSatSolver = (puzzle: Puzzle): CheckResult | false => {
+  if (!puzzle.boundryCells.size) return false;
+
   const [initialClauses, translator] = boundryClauses(puzzle);
 
   const initialSolution = satSolve(translator.size, initialClauses);

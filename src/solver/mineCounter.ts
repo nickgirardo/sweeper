@@ -54,6 +54,14 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
 
   if (width * height * requiredFillRatio > checked.size) return false;
 
+  const openCellCount = width * height - checked.size;
+  // All cells should be flagged
+  if (openCellCount === leftToFind)
+    return {
+      safeToCheck: [],
+      safeToFlag: difference(range(width * height), Array.from(checked)),
+    };
+
   // Naive check to see if using this solver makes any possible sense
   // If there are more mines remaining then we could possibly know about then we should give up
   const maxMinesWeBorder = sumBy(
