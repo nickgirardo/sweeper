@@ -32,7 +32,6 @@ onmessage = (_ev: MessageEvent<any>): void => {
       new Rand(seed)
     );
 
-    puzzle.checkTile(startingTile);
     const solution = solveBoard(puzzle);
 
     if (solution.solves) {
