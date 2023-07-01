@@ -170,7 +170,7 @@ export class Puzzle {
         if (!this.boundryCells.includes(t)) this.boundryCells.push(t);
       } else {
         const ix = this.boundryCells.indexOf(t);
-        if (ix !== -1) return;
+        if (ix === -1) return;
 
         this.boundryCells.splice(ix, 1);
       }
