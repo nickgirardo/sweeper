@@ -58,7 +58,6 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
       if (result.safeToCheck.length === 0 && result.safeToFlag.length === 0)
         continue;
 
-      // TODO Perf: coalesce these changes
       puzzle.updatePuzzle(result.safeToCheck, result.safeToFlag);
 
       steps.push({
