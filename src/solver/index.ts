@@ -32,12 +32,8 @@ type SolutionStep = {
 };
 
 export const solveBoard = (puzzle: Puzzle): Solution => {
-  const { width, height } = puzzle;
-
   const puzzleStart = performance.now();
   const steps: Array<SolutionStep> = [];
-
-  const puzzleComplete = () => puzzle.checked.setCount === width * height;
 
   const solvers: Array<[(p: Puzzle) => CheckResult | false, Solver]> = [
     [simpleSolver, Solver.Simple],
@@ -47,15 +43,18 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
     [borderSatSolver, Solver.BorderSat],
   ];
 
-  outer: while (!puzzleComplete()) {
+  outer: while (!puzzle.isSolved()) {
     const setpStart = performance.now();
 
     for (const [solver, solverUsed] of solvers) {
       const result = solver(puzzle);
 
-      if (!result) continue;
-
-      if (result.safeToCheck.length === 0 && result.safeToFlag.length === 0)
+      // No information gained from this specific solver
+      // Try the next
+      if (
+        !result ||
+        (result.safeToCheck.length === 0 && result.safeToFlag.length === 0)
+      )
         continue;
 
       puzzle.updatePuzzle(result.safeToCheck, result.safeToFlag);
@@ -65,6 +64,8 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
         stepTime: performance.now() - setpStart,
       });
 
+      // The puzzle state has been updated
+      // Reset to using the first solver
       continue outer;
     }
 

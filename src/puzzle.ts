@@ -71,6 +71,8 @@ export class Puzzle {
     };
   }
 
+  isSolved = (): boolean => this.checked.setCount === this.width * this.height;
+
   updatePuzzle(safeToCheck: Array<number>, safeToFlag: Array<number>): void {
     const beforeSize = this.checked.setCount;
     for (const t of safeToCheck) this.#checkTileNoUpdate(t);
