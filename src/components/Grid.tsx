@@ -83,7 +83,7 @@ export const Grid: FunctionComponent<Props> = (props) => {
         <Tile
           neighbors={puzzle.value.neighbors[n]}
           isChecked={checked.value.isSet(n)}
-          isMine={puzzle.value.mines.has(n)}
+          isMine={puzzle.value.mines.includes(n)}
           isFlagged={flagged.value.isSet(n)}
           handleCheck={() => checkTile(n)}
           handleFlag={() => flagTile(n)}

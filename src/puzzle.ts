@@ -1,5 +1,4 @@
 import { Solution } from "./solver/index.js";
-import { setEvery } from "./util/array.js";
 import { Bitset } from "./util/bitset.js";
 import { Rand, range } from "./util/index.js";
 
@@ -14,13 +13,13 @@ export class Puzzle {
   readonly mineCount: number;
   readonly neighbors: Array<number>;
   readonly remainingNeighbors: Array<number>;
-  readonly mines: Set<number>;
+  readonly mines: Array<number>;
   readonly flagged: Bitset;
   readonly checked: Bitset;
   readonly checkedButNotFlagged: Bitset;
 
-  neighboringCells: Array<Set<number>>;
-  boundryCells: Set<number>;
+  neighboringCells: Array<Array<number>>;
+  boundryCells: Array<number>;
 
   constructor(
     width: number,
@@ -34,9 +33,9 @@ export class Puzzle {
     this.width = width;
     this.height = height;
     this.mineCount = mineCount;
-    this.mines = new Set();
+    this.mines = [];
     this.neighbors = new Array(totalCells).fill(0);
-    this.boundryCells = new Set();
+    this.boundryCells = new Array();
 
     this.flagged = new Bitset(totalCells);
     this.checked = new Bitset(totalCells);
@@ -49,10 +48,10 @@ export class Puzzle {
     const freeTiles = [startingTile, ...this.neighboringCells[startingTile]];
 
     // Set mines
-    while (this.mines.size < mineCount) {
+    while (this.mines.length < mineCount) {
       const location = Math.floor(rand.next() * totalCells);
-      if (!freeTiles.includes(location) && !this.mines.has(location))
-        this.mines.add(location);
+      if (!freeTiles.includes(location) && !this.mines.includes(location))
+        this.mines.push(location);
     }
 
     // Calculate neighbors
@@ -108,14 +107,14 @@ export class Puzzle {
     if (this.flagged.isSet(tile)) return;
 
     if (this.checked.isSet(tile)) {
-      const flaggedNeighbors = Array.from(this.neighboringCells[tile]).filter(
-        (t) => this.flagged.isSet(t)
+      const flaggedNeighbors = this.neighboringCells[tile].filter((t) =>
+        this.flagged.isSet(t)
       );
 
       if (this.neighbors[tile] === flaggedNeighbors.length) {
-        const unflaggedNeighbors = Array.from(
-          this.neighboringCells[tile]
-        ).filter((t) => this.flagged.isUnset(t));
+        const unflaggedNeighbors = this.neighboringCells[tile].filter((t) =>
+          this.flagged.isUnset(t)
+        );
 
         unflaggedNeighbors.forEach(go);
       }
@@ -145,33 +144,35 @@ export class Puzzle {
   }
 
   checkSolution = (solution: Solution): boolean =>
-    solution.puzzle.flagged.setCount === this.mines.size &&
-    Array.from(this.mines).filter((m) => solution.puzzle.flagged.isUnset(m))
-      .length === 0;
+    solution.puzzle.flagged.setCount === this.mines.length &&
+    this.mines.filter((m) => solution.puzzle.flagged.isUnset(m)).length === 0;
 
   #updateBoundryCacheFull(): void {
-    this.boundryCells = new Set();
+    this.boundryCells = [];
 
     const checkedButNotFlagged = this.checkedButNotFlagged.getSetIndicies();
 
     for (const t of checkedButNotFlagged) {
-      if (!setEvery(this.neighboringCells[t], (c) => this.checked.isSet(c)))
-        this.boundryCells.add(t);
+      if (!this.neighboringCells[t].every((c) => this.checked.isSet(c)))
+        this.boundryCells.push(t);
     }
   }
 
   // NOTE tile is the cell which has changed
   // the cells which might be changed are itself and the checked, unflagged neighbors
   #updateBoundryCachePartial(tile: number): void {
-    const tilesToUpdate = Array.from(this.neighboringCells[tile]).filter((t) =>
+    const tilesToUpdate = this.neighboringCells[tile].filter((t) =>
       this.checkedButNotFlagged.isSet(t)
     );
 
     const update = (t: number): void => {
-      if (!setEvery(this.neighboringCells[t], (c) => this.checked.isSet(c))) {
-        this.boundryCells.add(t);
+      if (!this.neighboringCells[t].every((c) => this.checked.isSet(c))) {
+        if (!this.boundryCells.includes(t)) this.boundryCells.push(t);
       } else {
-        this.boundryCells.delete(t);
+        const ix = this.boundryCells.indexOf(t);
+        if (ix !== -1) return;
+
+        this.boundryCells.splice(ix, 1);
       }
     };
 
@@ -183,30 +184,28 @@ export class Puzzle {
 
   // Get ids of all neighboring tiles to a given tile
   // The list of neighbors is sorted in numerically ascending order
-  #getNeighbors(tile: number): Set<number> {
+  #getNeighbors(tile: number): Array<number> {
     const { width, height } = this;
     const x = tile % width;
     const y = (tile - x) / width;
 
-    return new Set(
-      [
-        // NW tile
-        x !== 0 && y !== 0 && tile - width - 1,
-        // North tile
-        y !== 0 && tile - width,
-        // NE tile
-        x !== width - 1 && y !== 0 && tile - width + 1,
-        // West tile
-        x !== 0 && tile - 1,
-        // East tile
-        x !== width - 1 && tile + 1,
-        // SW tile
-        x !== 0 && y !== height - 1 && tile + width - 1,
-        // South tile
-        y !== height - 1 && tile + width,
-        // SE tile
-        x !== width - 1 && y !== height - 1 && tile + width + 1,
-      ].filter((n): n is number => n !== false)
-    );
+    return [
+      // NW tile
+      x !== 0 && y !== 0 && tile - width - 1,
+      // North tile
+      y !== 0 && tile - width,
+      // NE tile
+      x !== width - 1 && y !== 0 && tile - width + 1,
+      // West tile
+      x !== 0 && tile - 1,
+      // East tile
+      x !== width - 1 && tile + 1,
+      // SW tile
+      x !== 0 && y !== height - 1 && tile + width - 1,
+      // South tile
+      y !== height - 1 && tile + width,
+      // SE tile
+      x !== width - 1 && y !== height - 1 && tile + width + 1,
+    ].filter((n): n is number => n !== false);
   }
 }

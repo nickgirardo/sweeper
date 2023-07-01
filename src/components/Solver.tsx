@@ -122,7 +122,7 @@ export const Solver: FunctionComponent<{}> = () => {
         height={height.value}
         checked={new Bitset(width.value * height.value, true)}
         neighbors={initialPuzzle.neighbors}
-        flagged={Bitset.fromSet(
+        flagged={Bitset.fromArray(
           width.value * height.value,
           initialPuzzle.mines
         )}

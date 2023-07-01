@@ -14,20 +14,20 @@ import { Bitset } from "../util/bitset.js";
 function* properSubsets(
   width: number,
   height: number,
-  neighboringCells: Array<Set<number>>,
-  boundryCells: Set<number>,
+  neighboringCells: Array<Array<number>>,
+  boundryCells: Array<number>,
   checked: Bitset
 ): Generator<[Array<number>, Array<number>]> {
   // All of the neighbors for a given cell which are unchecked
   // TODO Seems like a very expensive computation
   const uncheckedNeighboringCells = range(width * height).map((t) =>
-    Array.from(neighboringCells[t]).filter((t) => checked.isUnset(t))
+    neighboringCells[t].filter((t) => checked.isUnset(t))
   );
 
   // Ascending order based on number of neighbors
   // NOTE Sorting here means we don't have to iterate over cells which have fewer neighbors than that
   // cell.  This might actually be slower than just iterating over all of the cells and exiting early
-  const sortedBoundryCells = Array.from(boundryCells).sort(
+  const sortedBoundryCells = boundryCells.sort(
     (a, b) =>
       uncheckedNeighboringCells[a].length - uncheckedNeighboringCells[b].length
   );
@@ -83,7 +83,7 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     remainingNeighbors,
   } = puzzle;
   const uncheckedNeighboringCells = neighboringCells.map((t) =>
-    Array.from(t).filter((r) => checked.isUnset(r))
+    t.filter((r) => checked.isUnset(r))
   );
 
   for (const [smaller, larger] of properSubsets(
@@ -101,8 +101,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
       sumBy(larger, (t) => remainingNeighbors[t])
     ) {
       const safeToCheck = difference(
-        larger.flatMap((t) => Array.from(uncheckedNeighboringCells[t])),
-        smaller.flatMap((t) => Array.from(uncheckedNeighboringCells[t]))
+        larger.flatMap((t) => uncheckedNeighboringCells[t]),
+        smaller.flatMap((t) => uncheckedNeighboringCells[t])
       );
 
       return {
@@ -124,8 +124,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
 
     if (sizeDifference === mineDifference) {
       const safeToFlag = difference(
-        larger.flatMap((t) => Array.from(uncheckedNeighboringCells[t])),
-        smaller.flatMap((t) => Array.from(uncheckedNeighboringCells[t]))
+        larger.flatMap((t) => uncheckedNeighboringCells[t]),
+        smaller.flatMap((t) => uncheckedNeighboringCells[t])
       );
 
       return {

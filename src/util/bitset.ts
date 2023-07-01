@@ -16,7 +16,7 @@ export class Bitset {
     return ret;
   }
 
-  static fromSet(size: number, set: Set<number>): Bitset {
+  static fromArray(size: number, set: Array<number>): Bitset {
     const ret = new Bitset(size);
     for (const t of set) ret.set(t);
 

@@ -18,7 +18,7 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
   // isSatiated: are all of the tiles neighboring mines flagged already?
   const isSatiated = (t: number) => remainingNeighbors[t] === 0;
 
-  const satiatedCells = Array.from(boundryCells).filter(isSatiated);
+  const satiatedCells = boundryCells.filter(isSatiated);
 
   if (satiatedCells.length)
     return {
@@ -28,21 +28,23 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
-    Array.from(neighboringCells[t]).filter((t) => checked.isUnset(t)).length ===
+    neighboringCells[t].filter((t) => checked.isUnset(t)).length ===
     remainingNeighbors[t];
 
-  const antiSatiatedCells = Array.from(boundryCells).filter(isAntiSatiated);
+  const antiSatiatedCells = boundryCells.filter(isAntiSatiated);
 
   if (antiSatiatedCells.length) {
-    const allNeighbors = new Set<number>();
+    const allNeighbors = new Array<number>();
     for (const t of antiSatiatedCells) {
-      neighboringCells[t].forEach((b) => allNeighbors.add(b));
+      for (const b of neighboringCells[t]) {
+        if (!allNeighbors.includes(b)) allNeighbors.push(b);
+      }
     }
 
     // TODO might want to return sets instead of arrays
     return {
       safeToCheck: [],
-      safeToFlag: Array.from(allNeighbors).filter((t) => checked.isUnset(t)),
+      safeToFlag: allNeighbors.filter((t) => checked.isUnset(t)),
     };
   }
 

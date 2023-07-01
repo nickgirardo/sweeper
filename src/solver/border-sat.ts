@@ -39,7 +39,7 @@ const boundryClauses = (puzzle: Puzzle): [Array<Clause>, Translator] => {
   const translator = new Translator();
 
   for (const t of boundryCells) {
-    const constrainedUnknowns = Array.from(neighboringCells[t]).filter((t) =>
+    const constrainedUnknowns = neighboringCells[t].filter((t) =>
       checked.isUnset(t)
     );
     for (const c of constrainedUnknowns) {
@@ -57,7 +57,7 @@ const boundryClauses = (puzzle: Puzzle): [Array<Clause>, Translator] => {
 };
 
 export const borderSatSolver = (puzzle: Puzzle): CheckResult | false => {
-  if (!puzzle.boundryCells.size) return false;
+  if (!puzzle.boundryCells.length) return false;
 
   const [initialClauses, translator] = boundryClauses(puzzle);
 
