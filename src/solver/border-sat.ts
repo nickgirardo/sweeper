@@ -39,8 +39,8 @@ const boundryClauses = (puzzle: Puzzle): [Array<Clause>, Translator] => {
   const translator = new Translator();
 
   for (const t of boundryCells) {
-    const constrainedUnknowns = Array.from(neighboringCells[t]).filter(
-      (t) => !checked[t]
+    const constrainedUnknowns = Array.from(neighboringCells[t]).filter((t) =>
+      checked.isUnset(t)
     );
     for (const c of constrainedUnknowns) {
       translator.set(c);

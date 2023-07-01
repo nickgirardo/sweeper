@@ -37,7 +37,7 @@ export const solveBoard = (puzzle: Puzzle): Solution => {
   const puzzleStart = performance.now();
   const steps: Array<SolutionStep> = [];
 
-  const puzzleComplete = () => puzzle.checkedCount === width * height;
+  const puzzleComplete = () => puzzle.checked.setCount === width * height;
 
   const solvers: Array<[(p: Puzzle) => CheckResult | false, Solver]> = [
     [simpleSolver, Solver.Simple],

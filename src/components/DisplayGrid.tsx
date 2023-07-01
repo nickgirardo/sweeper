@@ -1,5 +1,6 @@
 import { FunctionComponent } from "preact";
 
+import { Bitset } from "../util/bitset.js";
 import { range } from "../util/index.js";
 
 import { Tile } from "./Tile.js";
@@ -8,8 +9,8 @@ interface Props {
   width: number;
   height: number;
   neighbors: Array<number>;
-  checked: Array<boolean>;
-  flagged: Array<boolean>;
+  checked: Bitset;
+  flagged: Bitset;
 }
 
 export const DisplayGrid: FunctionComponent<Props> = ({
@@ -26,9 +27,9 @@ export const DisplayGrid: FunctionComponent<Props> = ({
     {range(width * height).map((n) => (
       <Tile
         neighbors={neighbors[n]}
-        isChecked={checked[n]}
+        isChecked={checked.isSet(n)}
         isMine={false}
-        isFlagged={flagged[n]}
+        isFlagged={flagged.isSet(n)}
         handleCheck={() => undefined}
         handleFlag={() => undefined}
       />

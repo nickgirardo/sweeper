@@ -6,6 +6,7 @@ import { Puzzle } from "../puzzle.js";
 import { range, Rand } from "../util/index.js";
 
 import { Tile } from "./Tile.js";
+import { Bitset } from "../util/bitset.js";
 
 interface Props {
   width: number;
@@ -20,8 +21,8 @@ const puzzleIsReady = (
 
 export const Grid: FunctionComponent<Props> = (props) => {
   const puzzle = useSignal<Puzzle | null>(null);
-  const checked = useSignal<Array<boolean>>([]);
-  const flagged = useSignal<Array<boolean>>([]);
+  const checked = useSignal<Bitset>(new Bitset(0));
+  const flagged = useSignal<Bitset>(new Bitset(0));
 
   // Generate grid
   useEffect(() => {
@@ -54,7 +55,11 @@ export const Grid: FunctionComponent<Props> = (props) => {
   };
 
   const flagTile = (tile: number) => {
-    if (!puzzle.value || (checked.value[tile] && !flagged.value[tile])) return;
+    if (
+      !puzzle.value ||
+      (checked.value.isSet(tile) && !flagged.value.isSet(tile))
+    )
+      return;
 
     puzzle.value.flagTile(tile);
 
@@ -77,9 +82,9 @@ export const Grid: FunctionComponent<Props> = (props) => {
       {range(props.width * props.height).map((n) => (
         <Tile
           neighbors={puzzle.value.neighbors[n]}
-          isChecked={checked.value[n]}
+          isChecked={checked.value.isSet(n)}
           isMine={puzzle.value.mines.has(n)}
-          isFlagged={flagged.value[n]}
+          isFlagged={flagged.value.isSet(n)}
           handleCheck={() => checkTile(n)}
           handleFlag={() => flagTile(n)}
         />

@@ -8,6 +8,7 @@ import {
 } from "../util/array.js";
 import { range } from "../util/index.js";
 import { Puzzle } from "../puzzle.js";
+import { Bitset } from "../util/bitset.js";
 
 // TODO probably janky and should be rewritten
 function* properSubsets(
@@ -15,12 +16,12 @@ function* properSubsets(
   height: number,
   neighboringCells: Array<Set<number>>,
   boundryCells: Set<number>,
-  checked: Array<boolean>
+  checked: Bitset
 ): Generator<[Array<number>, Array<number>]> {
   // All of the neighbors for a given cell which are unchecked
   // TODO Seems like a very expensive computation
   const uncheckedNeighboringCells = range(width * height).map((t) =>
-    Array.from(neighboringCells[t]).filter((t) => !checked[t])
+    Array.from(neighboringCells[t]).filter((t) => checked.isUnset(t))
   );
 
   // Ascending order based on number of neighbors
@@ -82,7 +83,7 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     remainingNeighbors,
   } = puzzle;
   const uncheckedNeighboringCells = neighboringCells.map((t) =>
-    Array.from(t).filter((r) => !checked[r])
+    Array.from(t).filter((r) => checked.isUnset(r))
   );
 
   for (const [smaller, larger] of properSubsets(

@@ -4,8 +4,6 @@ import {
   sumBy,
   isUniq,
   subsetsOfMaxLength,
-  getSetIndicies,
-  getUnsetIndicies,
 } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
@@ -37,9 +35,8 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
   const {
     width,
     height,
-    flaggedCount,
+    flagged,
     checked,
-    checkedCount,
     checkedButNotFlagged,
     mineCount,
     neighboringCells,
@@ -47,32 +44,32 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
     remainingNeighbors,
   } = puzzle;
 
-  const leftToFind = mineCount - flaggedCount;
+  const leftToFind = mineCount - flagged.setCount;
 
   // Only attempt using this solver when 80% of the board has already been checked
   const requiredFillRatio = 0.8;
 
-  if (width * height * requiredFillRatio > checkedCount) return false;
+  if (width * height * requiredFillRatio > checked.setCount) return false;
 
-  const openCellCount = width * height - checkedCount;
+  const openCellCount = width * height - checked.setCount;
   // All cells should be flagged
   if (openCellCount === leftToFind)
     return {
       safeToCheck: [],
-      safeToFlag: checked.map((t, ix) => (t ? -1 : ix)).filter((t) => t !== -1),
+      safeToFlag: checked.getUnsetIndicies(),
     };
 
   // Naive check to see if using this solver makes any possible sense
   // If there are more mines remaining then we could possibly know about then we should give up
   const maxMinesWeBorder = sumBy(
-    getSetIndicies(checkedButNotFlagged),
+    checkedButNotFlagged.getSetIndicies(),
     (t) => remainingNeighbors[t]
   );
 
   if (leftToFind > maxMinesWeBorder) return false;
 
   for (const cells of boundrySubsequences(
-    getSetIndicies(checked),
+    checked.getSetIndicies(),
     neighboringCells,
     boundryCells
   )) {
@@ -84,7 +81,7 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
       );
 
       const safeToCheck = difference(
-        getUnsetIndicies(checked),
+        checked.getUnsetIndicies(),
         neighborsOfGroup
       );
 

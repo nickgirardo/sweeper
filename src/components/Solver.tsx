@@ -8,6 +8,7 @@ import { Rand } from "../util/index.js";
 import { Puzzle } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
+import { Bitset } from "../util/bitset.js";
 
 const seed = signal<number>(0);
 const width = signal<number>(16);
@@ -105,7 +106,7 @@ export const Solver: FunctionComponent<{}> = () => {
         height={height.value}
         checked={initialPuzzle.checked}
         neighbors={initialPuzzle.neighbors}
-        flagged={[]}
+        flagged={new Bitset(width.value * height.value)}
       />
       {finalBoard && (
         <DisplayGrid
@@ -119,11 +120,12 @@ export const Solver: FunctionComponent<{}> = () => {
       <DisplayGrid
         width={width.value}
         height={height.value}
-        checked={new Array(width.value * height.value).fill(true)}
+        checked={new Bitset(width.value * height.value, true)}
         neighbors={initialPuzzle.neighbors}
-        flagged={new Array(width.value * height.value)
-          .fill(false)
-          .map((_, ix) => initialPuzzle.mines.has(ix))}
+        flagged={Bitset.fromSet(
+          width.value * height.value,
+          initialPuzzle.mines
+        )}
       />
     </div>
   );

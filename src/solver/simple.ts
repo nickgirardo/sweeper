@@ -28,7 +28,7 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
-    Array.from(neighboringCells[t]).filter((t) => !checked[t]).length ===
+    Array.from(neighboringCells[t]).filter((t) => checked.isUnset(t)).length ===
     remainingNeighbors[t];
 
   const antiSatiatedCells = Array.from(boundryCells).filter(isAntiSatiated);
@@ -42,7 +42,7 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
     // TODO might want to return sets instead of arrays
     return {
       safeToCheck: [],
-      safeToFlag: Array.from(allNeighbors).filter((t) => !checked[t]),
+      safeToFlag: Array.from(allNeighbors).filter((t) => checked.isUnset(t)),
     };
   }
 

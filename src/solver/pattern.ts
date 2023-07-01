@@ -16,7 +16,7 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
   } = puzzle;
 
   const uncheckedNeighboringCells = (t: number) =>
-    Array.from(neighboringCells[t]).filter((t) => !checked[t]);
+    Array.from(neighboringCells[t]).filter((t) => checked.isUnset(t));
 
   // 1-2-1 Patterns
   const checkHorizontal121 = (t: number): boolean =>
