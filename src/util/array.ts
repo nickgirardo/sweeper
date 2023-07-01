@@ -1,9 +1,3 @@
-export const getSetIndicies = (xs: Array<boolean>): Array<number> =>
-  xs.map((t, ix) => (t ? ix : -1)).filter((t) => t !== -1);
-
-export const getUnsetIndicies = (xs: Array<boolean>): Array<number> =>
-  xs.map((t, ix) => (t ? -1 : ix)).filter((t) => t !== -1);
-
 export const setDifference = <T>(a: Set<T>, b: Set<T>): Set<T> => {
   const ret = new Set<T>();
   for (const el of a) if (!b.has(el)) ret.add(el);
