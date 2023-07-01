@@ -1,3 +1,9 @@
+export const getSetIndicies = (xs: Array<boolean>): Array<number> =>
+  xs.map((t, ix) => (t ? ix : -1)).filter((t) => t !== -1);
+
+export const getUnsetIndicies = (xs: Array<boolean>): Array<number> =>
+  xs.map((t, ix) => (t ? -1 : ix)).filter((t) => t !== -1);
+
 export const setDifference = <T>(a: Set<T>, b: Set<T>): Set<T> => {
   const ret = new Set<T>();
   for (const el of a) if (!b.has(el)) ret.add(el);
@@ -24,19 +30,14 @@ export const difference = <T>(a: Array<T>, b: Array<T>): Array<T> =>
 export const intersection = <T>(a: Array<T>, b: Array<T>): Array<T> =>
   a.filter((t) => b.includes(t));
 
-export const areMutuallyExclusive = <T>(a: Set<T>, b: Set<T>): boolean =>
-  setEvery(a, (t) => !b.has(t));
+export const areMutuallyExclusive = <T>(a: Array<T>, b: Array<T>): boolean =>
+  a.every((t) => !b.includes(t));
 
-/*
 export const isSubsetOf = <T>(a: Array<T>, b: Array<T>): boolean =>
   a.every((t) => b.includes(t));
-  */
 
-export const isSubsetOf = <T>(a: Set<T>, b: Set<T>): boolean =>
-  setEvery(a, (t) => b.has(t));
-
-export const isProperSubsetOf = <T>(a: Set<T>, b: Set<T>): boolean =>
-  a.size < b.size && isSubsetOf(a, b);
+export const isProperSubsetOf = <T>(a: Array<T>, b: Array<T>): boolean =>
+  a.length < b.length && isSubsetOf(a, b);
 
 export const uniq = <T>(a: Array<T>): Array<T> =>
   a.filter((t, ix) => !a.slice(ix + 1).includes(t));

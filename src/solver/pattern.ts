@@ -1,6 +1,6 @@
 import { CheckResult } from "./index.js";
 
-import { intersection, setDifference, union } from "../util/array.js";
+import { intersection, union } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // TODO explain why
@@ -16,7 +16,7 @@ export const patternSolver = (puzzle: Puzzle): CheckResult | false => {
   } = puzzle;
 
   const uncheckedNeighboringCells = (t: number) =>
-    setDifference(neighboringCells[t], checked);
+    Array.from(neighboringCells[t]).filter((t) => !checked[t]);
 
   // 1-2-1 Patterns
   const checkHorizontal121 = (t: number): boolean =>

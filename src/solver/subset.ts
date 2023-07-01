@@ -4,7 +4,6 @@ import {
   areMutuallyExclusive,
   difference,
   isProperSubsetOf,
-  setDifference,
   sumBy,
 } from "../util/array.js";
 import { range } from "../util/index.js";
@@ -16,12 +15,12 @@ function* properSubsets(
   height: number,
   neighboringCells: Array<Set<number>>,
   boundryCells: Set<number>,
-  checked: Set<number>
+  checked: Array<boolean>
 ): Generator<[Array<number>, Array<number>]> {
   // All of the neighbors for a given cell which are unchecked
   // TODO Seems like a very expensive computation
   const uncheckedNeighboringCells = range(width * height).map((t) =>
-    setDifference(neighboringCells[t], checked)
+    Array.from(neighboringCells[t]).filter((t) => !checked[t])
   );
 
   // Ascending order based on number of neighbors
@@ -29,7 +28,7 @@ function* properSubsets(
   // cell.  This might actually be slower than just iterating over all of the cells and exiting early
   const sortedBoundryCells = Array.from(boundryCells).sort(
     (a, b) =>
-      uncheckedNeighboringCells[a].size - uncheckedNeighboringCells[b].size
+      uncheckedNeighboringCells[a].length - uncheckedNeighboringCells[b].length
   );
 
   for (const [ix, smaller] of sortedBoundryCells.entries()) {
@@ -59,10 +58,9 @@ function* properSubsets(
         continue;
 
       // TODO might be a faster way to merge
-      const union = new Set([
-        ...uncheckedNeighboringCells[cell],
-        ...uncheckedNeighboringCells[other],
-      ]);
+      const union = uncheckedNeighboringCells[cell].concat(
+        uncheckedNeighboringCells[other]
+      );
 
       for (const c of sortedBoundryCells) {
         if (c === cell || c === other) continue;
@@ -84,7 +82,7 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     remainingNeighbors,
   } = puzzle;
   const uncheckedNeighboringCells = neighboringCells.map((t) =>
-    setDifference(t, checked)
+    Array.from(t).filter((r) => !checked[r])
   );
 
   for (const [smaller, larger] of properSubsets(
@@ -116,8 +114,8 @@ export const subsetSolver = (puzzle: Puzzle): CheckResult | false => {
     // between the number of neighboring cells, every cell neighboring the larger but not the smaller
     // is a mine and can be flagged
     const sizeDifference =
-      sumBy(larger, (t) => uncheckedNeighboringCells[t].size) -
-      sumBy(smaller, (t) => uncheckedNeighboringCells[t].size);
+      sumBy(larger, (t) => uncheckedNeighboringCells[t].length) -
+      sumBy(smaller, (t) => uncheckedNeighboringCells[t].length);
 
     const mineDifference =
       sumBy(larger, (t) => remainingNeighbors[t]) -

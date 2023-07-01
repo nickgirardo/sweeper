@@ -5,9 +5,9 @@ import { Rand, range } from "./util/index.js";
 onmessage = (_ev: MessageEvent<any>): void => {
   console.log("worker: starting");
 
-  const width = 30;
+  const width = 16;
   const height = 16;
-  const mineCount = 99;
+  const mineCount = 40;
   const startingTile = 0;
 
   const solvable: Array<number> = [];
@@ -23,6 +23,7 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
   for (const seed of range(1000)) {
     if (seed % 50 === 0) console.log(seed);
+
     const puzzle = new Puzzle(
       width,
       height,

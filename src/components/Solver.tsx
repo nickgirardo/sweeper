@@ -4,15 +4,15 @@ import { Signal, signal } from "@preact/signals";
 import { useMemo } from "preact/hooks";
 
 import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
-import { Rand, range } from "../util/index.js";
+import { Rand } from "../util/index.js";
 import { Puzzle } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 
 const seed = signal<number>(0);
-const width = signal<number>(30);
+const width = signal<number>(16);
 const height = signal<number>(16);
-const mineCount = signal<number>(99);
+const mineCount = signal<number>(40);
 
 export const ValueAdjustor: FunctionComponent<{
   label: string;
@@ -105,7 +105,7 @@ export const Solver: FunctionComponent<{}> = () => {
         height={height.value}
         checked={initialPuzzle.checked}
         neighbors={initialPuzzle.neighbors}
-        flagged={new Set()}
+        flagged={[]}
       />
       {finalBoard && (
         <DisplayGrid
@@ -119,9 +119,11 @@ export const Solver: FunctionComponent<{}> = () => {
       <DisplayGrid
         width={width.value}
         height={height.value}
-        checked={new Set(range(width.value * height.value))}
+        checked={new Array(width.value * height.value).fill(true)}
         neighbors={initialPuzzle.neighbors}
-        flagged={initialPuzzle.mines}
+        flagged={new Array(width.value * height.value)
+          .fill(false)
+          .map((_, ix) => initialPuzzle.mines.has(ix))}
       />
     </div>
   );

@@ -20,8 +20,8 @@ const puzzleIsReady = (
 
 export const Grid: FunctionComponent<Props> = (props) => {
   const puzzle = useSignal<Puzzle | null>(null);
-  const checked = useSignal<Set<number>>(new Set());
-  const flagged = useSignal<Set<number>>(new Set());
+  const checked = useSignal<Array<boolean>>([]);
+  const flagged = useSignal<Array<boolean>>([]);
 
   // Generate grid
   useEffect(() => {
@@ -54,8 +54,7 @@ export const Grid: FunctionComponent<Props> = (props) => {
   };
 
   const flagTile = (tile: number) => {
-    if (!puzzle.value || (checked.value.has(tile) && !flagged.value.has(tile)))
-      return;
+    if (!puzzle.value || (checked.value[tile] && !flagged.value[tile])) return;
 
     puzzle.value.flagTile(tile);
 
@@ -78,9 +77,9 @@ export const Grid: FunctionComponent<Props> = (props) => {
       {range(props.width * props.height).map((n) => (
         <Tile
           neighbors={puzzle.value.neighbors[n]}
-          isChecked={checked.value.has(n)}
+          isChecked={checked.value[n]}
           isMine={puzzle.value.mines.has(n)}
-          isFlagged={flagged.value.has(n)}
+          isFlagged={flagged.value[n]}
           handleCheck={() => checkTile(n)}
           handleFlag={() => flagTile(n)}
         />

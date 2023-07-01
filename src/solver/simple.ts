@@ -1,5 +1,4 @@
 import { CheckResult } from "./index.js";
-import { setDifference } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
 // A fast, simple solver which can only progress the puzzle in somewhat trivial positions
@@ -29,7 +28,8 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
 
   // isAntiSatiated: does the tile require that all of its unchecked neighbors are mines?
   const isAntiSatiated = (t: number) =>
-    setDifference(neighboringCells[t], checked).size === remainingNeighbors[t];
+    Array.from(neighboringCells[t]).filter((t) => !checked[t]).length ===
+    remainingNeighbors[t];
 
   const antiSatiatedCells = Array.from(boundryCells).filter(isAntiSatiated);
 
@@ -42,7 +42,7 @@ export const simpleSolver = (puzzle: Puzzle): CheckResult | false => {
     // TODO might want to return sets instead of arrays
     return {
       safeToCheck: [],
-      safeToFlag: Array.from(setDifference(allNeighbors, checked)),
+      safeToFlag: Array.from(allNeighbors).filter((t) => !checked[t]),
     };
   }
 

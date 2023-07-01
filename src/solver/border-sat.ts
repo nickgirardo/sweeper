@@ -40,7 +40,7 @@ const boundryClauses = (puzzle: Puzzle): [Array<Clause>, Translator] => {
 
   for (const t of boundryCells) {
     const constrainedUnknowns = Array.from(neighboringCells[t]).filter(
-      (t) => !checked.has(t)
+      (t) => !checked[t]
     );
     for (const c of constrainedUnknowns) {
       translator.set(c);

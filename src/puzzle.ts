@@ -1,10 +1,10 @@
 import { Solution } from "./solver/index.js";
-import { setDifference, setIntersection, setEvery } from "./util/array.js";
+import { setEvery } from "./util/array.js";
 import { Rand, range } from "./util/index.js";
 
 export interface PuzzleState {
-  checked: Set<number>;
-  flagged: Set<number>;
+  checked: Array<boolean>;
+  flagged: Array<boolean>;
 }
 
 export class Puzzle {
@@ -14,8 +14,11 @@ export class Puzzle {
   readonly neighbors: Array<number>;
   readonly remainingNeighbors: Array<number>;
   readonly mines: Set<number>;
-  readonly flagged: Set<number>;
-  readonly checked: Set<number>;
+  readonly flagged: Array<boolean>;
+  readonly checked: Array<boolean>;
+  readonly checkedButNotFlagged: Array<boolean>;
+  checkedCount: number;
+  flaggedCount: number;
 
   neighboringCells: Array<Set<number>>;
   boundryCells: Set<number>;
@@ -34,9 +37,15 @@ export class Puzzle {
     this.mineCount = mineCount;
     this.mines = new Set();
     this.neighbors = new Array(totalCells).fill(0);
-    this.flagged = new Set();
-    this.checked = new Set();
     this.boundryCells = new Set();
+
+    this.flagged = new Array(totalCells).fill(false);
+    this.flaggedCount = 0;
+
+    this.checked = new Array(totalCells).fill(false);
+    this.checkedCount = 0;
+
+    this.checkedButNotFlagged = new Array(totalCells).fill(false);
 
     this.neighboringCells = range(width * height).map((t) =>
       this.#getNeighbors(t)
@@ -63,16 +72,16 @@ export class Puzzle {
 
   dumpState(): PuzzleState {
     return {
-      checked: new Set(Array.from(this.checked)),
-      flagged: new Set(Array.from(this.flagged)),
+      checked: [...this.checked],
+      flagged: [...this.flagged],
     };
   }
 
   updatePuzzle(safeToCheck: Array<number>, safeToFlag: Array<number>): void {
-    const beforeSize = this.checked.size;
+    const beforeSize = this.checkedCount;
     for (const t of safeToCheck) this.#checkTileNoUpdate(t);
     for (const t of safeToFlag) this.#flagTileNoUpdate(t);
-    const newlyChecked = this.checked.size - beforeSize;
+    const newlyChecked = this.checkedCount - beforeSize;
 
     if (newlyChecked === safeToCheck.length + safeToFlag.length) {
       safeToFlag.forEach((t) => this.#updateBoundryCachePartial(t));
@@ -91,28 +100,29 @@ export class Puzzle {
 
   #checkTileNoUpdate(tile: number): void {
     const go = (tile: number): void => {
-      if (this.checked.has(tile)) return;
+      if (this.checked[tile]) return;
 
-      this.checked.add(tile);
+      this.checked[tile] = true;
+      this.checkedCount++;
+      this.checkedButNotFlagged[tile] = true;
 
       // If there are no neighboring mines automatically check neighboring mines
       if (this.neighbors[tile] === 0)
         for (const n of this.neighboringCells[tile]) go(n);
     };
 
-    if (this.flagged.has(tile)) return;
+    if (this.flagged[tile]) return;
 
-    if (this.checked.has(tile)) {
-      const flaggedNeighbors = setIntersection(
-        this.neighboringCells[tile],
-        this.flagged
+    if (this.checked[tile]) {
+      const flaggedNeighbors = Array.from(this.neighboringCells[tile]).filter(
+        (t) => this.flagged[t]
       );
 
-      if (this.neighbors[tile] === flaggedNeighbors.size) {
-        const unflaggedNeighbors = setDifference(
-          this.neighboringCells[tile],
-          this.flagged
-        );
+      if (this.neighbors[tile] === flaggedNeighbors.length) {
+        const unflaggedNeighbors = Array.from(
+          this.neighboringCells[tile]
+        ).filter((t) => !this.flagged[t]);
+
         unflaggedNeighbors.forEach(go);
       }
     }
@@ -127,31 +137,45 @@ export class Puzzle {
   }
 
   #flagTileNoUpdate(tile: number): void {
-    if (this.flagged.has(tile)) {
+    if (this.flagged[tile]) {
       // Remove the tile from the flagged and checked lists
-      this.flagged.delete(tile);
-      this.checked.delete(tile);
+      this.flagged[tile] = false;
+      this.checked[tile] = false;
+      this.checkedCount--;
+      this.flaggedCount--;
       this.neighboringCells[tile].forEach((t) => this.remainingNeighbors[t]++);
     } else {
       // Add the tile to flagged and checked lists
-      this.checked.add(tile);
-      this.flagged.add(tile);
+      this.flagged[tile] = true;
+      this.checked[tile] = true;
+      this.checkedCount++;
+      this.flaggedCount++;
       this.neighboringCells[tile].forEach((t) => this.remainingNeighbors[t]--);
     }
   }
 
   checkSolution(solution: Solution): boolean {
+    const flaggedCount = solution.puzzle.flagged.reduce(
+      (acc, b) => (b ? acc + 1 : acc),
+      0
+    );
     return (
-      solution.puzzle.flagged.size === this.mines.size &&
-      setDifference(solution.puzzle.flagged, this.mines).size === 0
+      flaggedCount === this.mines.size &&
+      Array.from(this.mines).filter((m) => !solution.puzzle.flagged[m])
+        .length === 0
     );
   }
 
   #updateBoundryCacheFull(): void {
     this.boundryCells = new Set();
 
-    for (const t of setDifference(this.checked, this.flagged)) {
-      if (!setEvery(this.neighboringCells[t], (c) => this.checked.has(c)))
+    const checkedButNotFlagged = this.checked
+      .map((t, ix) => t && !this.flagged[ix])
+      .map((t, ix) => (t ? ix : -1))
+      .filter((t) => t !== -1);
+
+    for (const t of checkedButNotFlagged) {
+      if (!setEvery(this.neighboringCells[t], (c) => this.checked[c]))
         this.boundryCells.add(t);
     }
   }
@@ -159,13 +183,12 @@ export class Puzzle {
   // NOTE tile is the cell which has changed
   // the cells which might be changed are itself and the checked, unflagged neighbors
   #updateBoundryCachePartial(tile: number): void {
-    const tilesToUpdate = setIntersection(
-      setDifference(this.neighboringCells[tile], this.flagged),
-      this.checked
+    const tilesToUpdate = Array.from(this.neighboringCells[tile]).filter(
+      (t) => this.checked[t] && !this.flagged[t]
     );
 
     const update = (t: number): void => {
-      if (!setEvery(this.neighboringCells[t], (c) => this.checked.has(c))) {
+      if (!setEvery(this.neighboringCells[t], (c) => this.checked[c])) {
         this.boundryCells.add(t);
       } else {
         this.boundryCells.delete(t);
@@ -173,7 +196,7 @@ export class Puzzle {
     };
 
     // TODO without the checks here I solve more puzzles. Look into why that is
-    if (this.checked.has(tile) && !this.flagged.has(tile)) update(tile);
+    if (this.checked[tile] && !this.flagged[tile]) update(tile);
 
     for (const t of tilesToUpdate) update(t);
   }
