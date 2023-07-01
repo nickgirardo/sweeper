@@ -6,7 +6,6 @@ import {
   subsetsOfMaxLength,
   getSetIndicies,
   getUnsetIndicies,
-  intersection,
 } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
@@ -38,13 +37,11 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
   const {
     width,
     height,
-    flagged,
     flaggedCount,
     checked,
     checkedCount,
     checkedButNotFlagged,
     mineCount,
-    neighbors,
     neighboringCells,
     boundryCells,
     remainingNeighbors,
