@@ -1,29 +1,49 @@
 import { solveBoard } from "./solver/index.js";
 import { Puzzle } from "./puzzle.js";
-import { Rand, range } from "./util/index.js";
+import { Rand, assertNever, range } from "./util/index.js";
+import {
+  GenPuzzleMessage,
+  MessageKind,
+  PerfTestMessage,
+  SweepMsg,
+} from "./util/worker.js";
 
-onmessage = (_ev: MessageEvent<any>): void => {
-  console.log("worker: starting");
+const isExpectedData = (data: any): data is SweepMsg =>
+  data.kind && Object.values(MessageKind).includes(data.kind as MessageKind);
 
-  const width = 16;
-  const height = 16;
-  const mineCount = 40;
-  const startingTile = 0;
+onmessage = (ev: MessageEvent<any>): void => {
+  const data = ev.data;
 
-  const solvable: Array<number> = [];
-  const unsolvable: Array<number> = [];
+  if (!isExpectedData(data)) {
+    postMessage("Bad Message");
+    return;
+  }
 
-  const stepCounts = {
-    simple: 0,
-    pattern: 0,
-    subset: 0,
-    "mine-counter": 0,
-    "border-sat": 0,
-  };
+  switch (data.kind) {
+    case MessageKind.PerfTest:
+      perfTest(data);
+      return;
+    case MessageKind.GenPuzzle:
+      genPuzzle(data);
+      return;
+    default:
+      assertNever(data);
+  }
+};
 
-  for (const seed of range(1000)) {
-    if (seed % 50 === 0) console.log(seed);
+// TODO
+const genPuzzle = (msg: GenPuzzleMessage) => {
+  console.warn("genPuzzle: unimplemented!", msg);
+};
 
+const perfTest = (msg: PerfTestMessage) => {
+  const start = performance.now();
+
+  const { width, height, mineCount, startingTile } = msg.puzzleArgs;
+
+  let solvable = 0;
+
+  for (const seed of range(msg.iterations)) {
     const puzzle = new Puzzle(
       width,
       height,
@@ -34,12 +54,6 @@ onmessage = (_ev: MessageEvent<any>): void => {
 
     const solution = solveBoard(puzzle);
 
-    if (solution.solves) {
-      for (const step of solution.steps) {
-        stepCounts[step.solver]++;
-      }
-    }
-
     if (solution.solves && !puzzle.checkSolution(solution))
       console.log(
         "something went wrong",
@@ -48,11 +62,12 @@ onmessage = (_ev: MessageEvent<any>): void => {
         puzzle.mines
       );
 
-    if (solution.solves) solvable.push(seed);
-    else unsolvable.push(seed);
+    if (solution.solves) solvable++;
   }
 
-  console.log(stepCounts);
-
-  postMessage([solvable.length, unsolvable.length]);
+  postMessage({
+    id: msg.id,
+    timeElapsed: performance.now() - start,
+    solved: solvable / msg.iterations,
+  });
 };
