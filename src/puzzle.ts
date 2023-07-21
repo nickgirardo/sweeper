@@ -66,8 +66,8 @@ export class Puzzle {
 
   dumpState(): PuzzleState {
     return {
-      checked: Bitset.fromBitArray([...this.checked]),
-      flagged: Bitset.fromBitArray([...this.flagged]),
+      checked: this.checked.clone(),
+      flagged: this.flagged.clone(),
     };
   }
 
@@ -152,9 +152,7 @@ export class Puzzle {
   #updateBoundryCacheFull(): void {
     this.boundryCells = [];
 
-    const checkedButNotFlagged = this.checkedButNotFlagged.getSetIndicies();
-
-    for (const t of checkedButNotFlagged) {
+    for (const t of this.checkedButNotFlagged.getSetIndicies()) {
       if (!this.neighboringCells[t].every((c) => this.checked.isSet(c)))
         this.boundryCells.push(t);
     }

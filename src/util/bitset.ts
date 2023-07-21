@@ -1,17 +1,21 @@
 export class Bitset {
-  #bits: Array<boolean>;
+  #bits: Uint8Array;
   setCount: number;
   unsetCount: number;
 
   constructor(size: number, startingValue: boolean = false) {
-    this.#bits = new Array(size).fill(startingValue);
+    this.#bits = new Uint8Array(size);
     this.setCount = startingValue ? size : 0;
     this.unsetCount = startingValue ? 0 : size;
+
+    if (startingValue) {
+      this.#bits.fill(1);
+    }
   }
 
-  static fromBitArray(bits: Array<boolean>): Bitset {
-    const ret = new Bitset(bits.length);
-    ret.#bits = bits;
+  clone(): Bitset {
+    const ret = new Bitset(this.#bits.length);
+    ret.#bits = new Uint8Array(this.#bits);
 
     return ret;
   }
@@ -27,13 +31,13 @@ export class Bitset {
     for (const b of this.#bits) yield b;
   }
 
-  isSet = (bit: number): boolean => this.#bits[bit];
+  isSet = (bit: number): boolean => !!this.#bits[bit];
   isUnset = (bit: number): boolean => !this.#bits[bit];
 
   set(bit: number) {
     if (this.#bits[bit]) return;
 
-    this.#bits[bit] = true;
+    this.#bits[bit] = 1;
     this.setCount++;
     this.unsetCount--;
   }
@@ -41,15 +45,61 @@ export class Bitset {
   unset(bit: number) {
     if (!this.#bits[bit]) return;
 
-    this.#bits[bit] = false;
+    this.#bits[bit] = 0;
     this.setCount--;
     this.unsetCount++;
   }
 
-  // TODO might be a better way to write all of these
-  getSetIndicies = (): Array<number> =>
-    this.#bits.map((t, ix) => (t ? ix : -1)).filter((t) => t !== -1);
+  getSetIndicies = (): Array<number> => {
+    const ret = [];
+    for (let i = 0; i < this.#bits.length; i++)
+      if (!!this.#bits[i]) ret.push(i);
+    return ret;
+  };
 
-  getUnsetIndicies = (): Array<number> =>
-    this.#bits.map((t, ix) => (t ? -1 : ix)).filter((t) => t !== -1);
+  getUnsetIndicies = (): Array<number> => {
+    const ret = [];
+    for (let i = 0; i < this.#bits.length; i++) if (!this.#bits[i]) ret.push(i);
+    return ret;
+  };
+
+  // NOTE wrote this and `iterUnsetIndicies` as tests but they seem to be consistently slower than
+  // just using `getSetIndicies` and `getUnsetIndices`
+  iterSetIndicies = (): Iterable<number> => {
+    let that = this;
+    return {
+      [Symbol.iterator]() {
+        let i = -1;
+        const iter = {
+          next(): IteratorResult<number> {
+            for (; i < that.#bits.length; ) {
+              i++;
+              if (!!that.#bits[i]) return { value: i, done: false };
+            }
+            return { done: true, value: undefined };
+          },
+        };
+        return iter;
+      },
+    };
+  };
+
+  iterUnsetIndicies = (): Iterable<number> => {
+    let that = this;
+    return {
+      [Symbol.iterator]() {
+        let i = -1;
+        const iter = {
+          next(): IteratorResult<number> {
+            for (; i < that.#bits.length; ) {
+              i++;
+              if (!that.#bits[i]) return { value: i, done: false };
+            }
+            return { done: true, value: undefined };
+          },
+        };
+        return iter;
+      },
+    };
+  };
 }
