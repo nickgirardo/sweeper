@@ -4,10 +4,17 @@ declare module "boolean-sat" {
   export type SATSolution = [null, ...boolean[]];
 
   // Returns a solution if satisfiable or false if unsatisfiable
-  function satSolve(
+  export function satSolve(
     size: number,
     clauses: Array<Array<number>>
   ): SATSolution | false;
 
-  export = satSolve;
+  // Returns a solution and clauses learned via CDCL if satisfiable
+  // or false if unsatisfiable
+  export function satSolveLearnClauses(
+    size: number,
+    clauses: Array<Array<number>>
+  ): [SATResult, Array<Clause>] | false;
+
+  export default satSolve;
 }
