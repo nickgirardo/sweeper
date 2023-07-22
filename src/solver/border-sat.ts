@@ -67,14 +67,17 @@ export const borderSatSolver = (puzzle: Puzzle): CheckResult | false => {
 
   const safeToCheck: Array<number> = [];
   const safeToFlag: Array<number> = [];
+  const learnedClauses: Array<Clause> = [];
 
   for (let i = 1; i < initialSolution.length; i++) {
-    const contradictoryClause = initialSolution[i] ? [-i] : [i];
+    const contradictoryLiteral = initialSolution[i] ? -i : i;
+    const contradictoryClause = [contradictoryLiteral];
 
-    const clauses = [...initialClauses, contradictoryClause];
+    const clauses = [...initialClauses, ...learnedClauses, contradictoryClause];
     const solution = satSolve(translator.size, clauses);
 
     if (!solution) {
+      learnedClauses.push([contradictoryLiteral * -1]);
       if (initialSolution[i]) safeToFlag.push(translator.getReverse(i)!);
       else if (!initialSolution[i]) safeToCheck.push(translator.getReverse(i)!);
     }
