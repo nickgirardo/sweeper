@@ -49,8 +49,8 @@ export const mineCounterSolver = (puzzle: Puzzle): CheckResult | false => {
 
   const leftToFind = mineCount - flagged.setCount;
 
-  // Only attempt using this solver when 80% of the board has already been checked
-  const requiredFillRatio = 0.8;
+  // Only attempt using this solver when 90% of the board has already been checked
+  const requiredFillRatio = 0.9;
 
   if (width * height * requiredFillRatio > checked.setCount) return false;
 
