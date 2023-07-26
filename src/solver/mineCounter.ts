@@ -3,7 +3,7 @@ import {
   difference,
   sumBy,
   isUniq,
-  subsequencesOfMaxLength,
+  subsequencesOfMaxLength4,
 } from "../util/array.js";
 import { Puzzle } from "../puzzle.js";
 
@@ -13,19 +13,13 @@ function* boundrySubsequences(
   neighboringCells: Array<Array<number>>,
   boundryCells: Array<number>
 ): Generator<Array<number>> {
-  const maxSubsequenceSize = 4;
-
   const cache: Array<Array<number>> = [];
   for (const t of boundryCells) {
     cache[t] = difference(neighboringCells[t], checked);
   }
 
-  for (const cells of subsequencesOfMaxLength(
-    boundryCells,
-    maxSubsequenceSize
-  )) {
-    if (cells.length > maxSubsequenceSize) continue;
-
+  // Limiting to subsequences of length at most 4 for performance
+  for (const cells of subsequencesOfMaxLength4(boundryCells)) {
     // NOTE joining the sets in this way is very slow
     const neighbors = cells.flatMap((t) => cache[t]);
     if (!isUniq(neighbors)) continue;

@@ -61,7 +61,79 @@ export function* subsequences<T>(xs: Array<T>): Generator<Array<T>> {
   }
 }
 
-export function* subsequencesOfMaxLength<T>(
+// A much more readable but slightly slower version of the below
+/*
+export function* subsequencesOfMaxLength4<T>(
+  xs: Array<T>
+): Generator<Array<T>> {
+  yield [];
+  for (let i = 0; i < xs.length; i++) {
+    yield [xs[i]];
+    for (let j = i + 1; j < xs.length; j++) {
+      yield [xs[i], xs[j]];
+      for (let k = j + 1; k < xs.length; k++) {
+        yield [xs[i], xs[j], xs[k]];
+        for (let l = k + 1; l < xs.length; l++) {
+          yield [xs[i], xs[j], xs[k], xs[l]];
+        }
+      }
+    }
+  }
+}
+*/
+
+// I know this is the ugliest and jankies fn ever written but it's fast enough that I feel compelled
+// to keep it around :(
+export function subsequencesOfMaxLength4<T>(xs: Array<T>): Iterable<Array<T>> {
+  return {
+    [Symbol.iterator]() {
+      let i = -1;
+      let j = -1;
+      let k = -1;
+      let l = -1;
+      return {
+        next(): IteratorResult<Array<T>> {
+          if (i === -1) {
+            i = 0;
+            return { done: false, value: [] };
+          }
+          if (i === xs.length) return { done: true, value: undefined };
+          if (j === -1) {
+            j = i + 1;
+            return { done: false, value: [xs[i]] };
+          }
+          if (j === xs.length) {
+            i++;
+            j = -1;
+            return this.next();
+          }
+          if (k === -1) {
+            k = j + 1;
+            return { done: false, value: [xs[i], xs[j]] };
+          }
+          if (k === xs.length) {
+            j++;
+            k = -1;
+            return this.next();
+          }
+          if (l === -1) {
+            l = k + 1;
+            return { done: false, value: [xs[i], xs[j], xs[k]] };
+          }
+          if (l === xs.length) {
+            k++;
+            l = -1;
+            return this.next();
+          }
+          l++;
+          return { done: false, value: [xs[i], xs[j], xs[k], xs[l - 1]] };
+        },
+      };
+    },
+  };
+}
+
+export function* subsequencesOfMaxLengthN<T>(
   xs: Array<T>,
   maxLength: number
 ): Generator<Array<T>> {
