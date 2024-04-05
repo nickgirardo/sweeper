@@ -5,7 +5,7 @@ import { Setup } from "./Setup.js";
 import { Grid } from "./Grid.js";
 import { PregameGrid } from "./PregameGrid.js";
 import { useEffect, useState } from "preact/hooks";
-import { MessageKind, genMsgId } from "../util/worker.js";
+import { ReqKind, RespKind, genMsgId, isSweepResp } from "../util/worker.js";
 
 enum Stage {
   Setup = "setup",
@@ -51,12 +51,24 @@ export const App: FunctionComponent<{}> = () => {
   useEffect(() => {
     const worker = new Worker("dist/worker.js", { type: "module" });
     worker.addEventListener("message", (ev) => {
-      const resp = ev.data;
-      console.log("response from worker", resp);
+      const data = ev.data;
+
+      if (!isSweepResp(data)) {
+        console.error("Malformed response");
+        return;
+      }
+
+      if (data.kind !== RespKind.GenPuzzle) {
+        console.error(
+          `Unexpected response type: "${data.kind}", expected "${RespKind.GenPuzzle}"`
+        );
+        return;
+      }
+
+      console.log("response from worker", data);
 
       setFoundGames(
-        (prev) =>
-          new Map([...prev, [resp.req.puzzleArgs.startingTile, resp.seed]])
+        (prev) => new Map([...prev, [data.startingTile, data.seed]])
       );
     });
     setGenPuzzleWorker(worker);
@@ -109,7 +121,7 @@ export const App: FunctionComponent<{}> = () => {
             const st = state.value as PreGameState;
 
             genPuzzleWorker.postMessage({
-              kind: MessageKind.GenPuzzle,
+              kind: ReqKind.GenPuzzle,
               id: genMsgId(),
               puzzleArgs: {
                 width: st.width,

@@ -2,28 +2,28 @@ import { solveBoard } from "./solver/index.js";
 import { Puzzle } from "./puzzle.js";
 import { Rand, assertNever, range } from "./util/index.js";
 import {
-  GenPuzzleMessage,
-  MessageKind,
-  PerfTestMessage,
-  SweepMsg,
+  GenPuzzleReq,
+  ReqKind,
+  PerfTestReq,
+  isSweepReq,
+  RespKind,
+  PerfTestResp,
+  GenPuzzleResp,
 } from "./util/worker.js";
-
-const isExpectedData = (data: any): data is SweepMsg =>
-  data.kind && Object.values(MessageKind).includes(data.kind as MessageKind);
 
 onmessage = (ev: MessageEvent<any>): void => {
   const data = ev.data;
 
-  if (!isExpectedData(data)) {
+  if (!isSweepReq(data)) {
     postMessage("Bad Message");
     return;
   }
 
   switch (data.kind) {
-    case MessageKind.PerfTest:
+    case ReqKind.PerfTest:
       perfTest(data);
       return;
-    case MessageKind.GenPuzzle:
+    case ReqKind.GenPuzzle:
       genPuzzle(data);
       return;
     default:
@@ -32,11 +32,11 @@ onmessage = (ev: MessageEvent<any>): void => {
 };
 
 // TODO
-const genPuzzle = (msg: GenPuzzleMessage) => {
-  const { width, height, mineCount, startingTile } = msg.puzzleArgs;
+const genPuzzle = (req: GenPuzzleReq) => {
+  const { width, height, mineCount, startingTile } = req.puzzleArgs;
 
   const start = performance.now();
-  for (let seed = msg.startingSeed; ; seed++) {
+  for (let seed = req.startingSeed; ; seed++) {
     const puzzle = new Puzzle(
       width,
       height,
@@ -48,26 +48,29 @@ const genPuzzle = (msg: GenPuzzleMessage) => {
     const solution = solveBoard(puzzle);
 
     if (solution.solves && puzzle.checkSolution(solution)) {
-      postMessage({
-        id: msg.id,
+      const resp: GenPuzzleResp = {
+        kind: RespKind.GenPuzzle,
+        id: req.id,
+        startingTile,
         seed,
         elapsed: performance.now() - start,
-        skipped: seed - msg.startingSeed,
-        startingTile: startingTile,
-      });
+        skipped: seed - req.startingSeed,
+      };
+      postMessage(resp);
+
       return;
     }
   }
 };
 
-const perfTest = (msg: PerfTestMessage) => {
+const perfTest = (req: PerfTestReq) => {
   const start = performance.now();
 
-  const { width, height, mineCount, startingTile } = msg.puzzleArgs;
+  const { width, height, mineCount, startingTile } = req.puzzleArgs;
 
   let solvable = 0;
 
-  for (const seed of range(msg.iterations)) {
+  for (const seed of range(req.iterations)) {
     const puzzle = new Puzzle(
       width,
       height,
@@ -89,9 +92,12 @@ const perfTest = (msg: PerfTestMessage) => {
     if (solution.solves) solvable++;
   }
 
-  postMessage({
-    id: msg.id,
+  const resp: PerfTestResp = {
+    kind: RespKind.PerfTest,
+    id: req.id,
     timeElapsed: performance.now() - start,
-    solved: solvable / msg.iterations,
-  });
+    solved: solvable / req.iterations,
+  };
+
+  postMessage(resp);
 };
