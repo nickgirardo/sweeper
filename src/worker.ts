@@ -33,7 +33,31 @@ onmessage = (ev: MessageEvent<any>): void => {
 
 // TODO
 const genPuzzle = (msg: GenPuzzleMessage) => {
-  console.warn("genPuzzle: unimplemented!", msg);
+  const { width, height, mineCount, startingTile } = msg.puzzleArgs;
+
+  const start = performance.now();
+  for (let seed = msg.startingSeed; ; seed++) {
+    const puzzle = new Puzzle(
+      width,
+      height,
+      mineCount,
+      startingTile,
+      new Rand(seed)
+    );
+
+    const solution = solveBoard(puzzle);
+
+    if (solution.solves && puzzle.checkSolution(solution)) {
+      postMessage({
+        id: msg.id,
+        seed,
+        elapsed: performance.now() - start,
+        skipped: seed - msg.startingSeed,
+        startingTile: startingTile,
+      });
+      return;
+    }
+  }
 };
 
 const perfTest = (msg: PerfTestMessage) => {

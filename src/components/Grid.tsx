@@ -13,6 +13,7 @@ interface Props {
   height: number;
   mineCount: number;
   startingTile: number;
+  seed: number;
 }
 
 const puzzleIsReady = (
@@ -31,7 +32,7 @@ export const Grid: FunctionComponent<Props> = (props) => {
       props.height,
       props.mineCount,
       props.startingTile,
-      new Rand(performance.now())
+      new Rand(props.seed)
     );
     const puzzleState = newPuzzle.dumpState();
 

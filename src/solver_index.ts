@@ -14,10 +14,17 @@ const setupWorker = (): void => {
     console.log("response from worker", resp);
   });
 
+  const hardDifficulty = {
+    width: 30,
+    height: 16,
+    mineCount: 99,
+    startingTile: 0,
+  };
+
   const msg: PerfTestMessage = {
     kind: MessageKind.PerfTest,
     id: genMsgId(),
-    puzzleArgs: { width: 16, height: 16, mineCount: 40, startingTile: 0 },
+    puzzleArgs: hardDifficulty,
     iterations: 2000,
   };
 
