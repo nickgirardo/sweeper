@@ -48,10 +48,12 @@ onmessage = (ev: MessageEvent<any>): void => {
 
 class SweepWorker {
   workQueue: Array<number> = [];
-  processed: Set<number> = new Set();
   running: boolean = false;
+  // Map from starting tile to valid seed
+  processed: Map<number, number> = new Map();
+  // If set, return the puzzle by starting tile when possible
+  returnPuzzle: number | null = null;
 
-  // TODO don't keep this
   id: PuzzleId;
 
   // puzzle settings
@@ -74,6 +76,12 @@ class SweepWorker {
     this.startingSeed = startingSeed;
   }
 
+  stop() {
+    this.running = false;
+    this.workQueue = [];
+    this.returnPuzzle = null;
+  }
+
   exec() {
     if (this.running) return;
 
@@ -85,16 +93,49 @@ class SweepWorker {
     scheduler.postTask(() => this.work());
   }
 
+  // Do the actual work
+  // There are two types of tasks that this does
+  // - Find a seed which produces a solvable puzzle for a given starting tile
+  // - Return a puzzle to the main thread
+  //
+  // The latter task takes priority.  If the latter task completes or if the work queue (consumed by the first
+  // task) is empty the worker stops its loop
+  //
+  // While the worker loops by calling itself, it's important that it does so by queueing a full task rather than
+  // just calling recursively or by queueing a microtask.  This is so the worker can be interrupted by new
+  // messages from the main thread
   work() {
+    if (this.running === false) return;
+
+    // Have we been requested to return puzzle and we've already solved it?
+    if (this.returnPuzzle !== null && this.processed.has(this.returnPuzzle)) {
+      // TODO return actual puzzle rather than seed
+      // this will allow future optimizations
+      const resp: GenPuzzleResp = {
+        kind: RespKind.GenPuzzle,
+        id: this.id,
+        startingTile: this.returnPuzzle,
+        // NOTE asserting here as we've checked with `has` above
+        seed: this.processed.get(this.returnPuzzle)!,
+      };
+
+      postMessage(resp);
+
+      this.stop();
+      return;
+    }
+
     let startingTile;
     do {
       startingTile = this.workQueue.shift();
 
-      if (startingTile === undefined) return;
+      if (startingTile === undefined) {
+        this.stop();
+        return;
+      }
     } while (this.processed.has(startingTile));
 
     this.solvePuzzle(startingTile);
-    this.processed.add(startingTile);
 
     //@ts-ignore
     scheduler.postTask(() => this.work());
@@ -113,15 +154,7 @@ class SweepWorker {
       const solution = solveBoard(puzzle);
 
       if (solution.solves && puzzle.checkSolution(solution)) {
-        const resp: GenPuzzleResp = {
-          kind: RespKind.GenPuzzle,
-          id: this.id,
-          startingTile,
-          seed,
-        };
-
-        // TODO perhaps it would be better to only send responses when tile is selected
-        postMessage(resp);
+        this.processed.set(startingTile, seed);
 
         return;
       }
@@ -129,8 +162,6 @@ class SweepWorker {
   }
 }
 
-// TODO instead of a single global worker, have series of workers per puzzle
-// and deallocate workers in abort msg
 let workers: Map<PuzzleId, SweepWorker> = new Map();
 
 const preparePuzzle = (req: PreparePuzzleReq) => {
@@ -178,6 +209,7 @@ const tileChosen = (req: TileChosenReq) => {
   }
 
   sweepWorker.workQueue = [req.tile];
+  sweepWorker.returnPuzzle = req.tile;
   sweepWorker.exec();
 };
 
