@@ -127,6 +127,18 @@ export const App: FunctionComponent<{}> = () => {
         <PregameGrid
           width={state.value.width}
           height={state.value.height}
+          handleHoverTile={(tile: number) => {
+            if (!puzzleWorker) throw new Error("Worker not ready");
+            if (puzzleId === null) throw new Error("Puzzle id not initialized");
+            // Don't allow changing the starting tile once it's chosen
+            if (startTile !== null) return;
+
+            puzzleWorker.postMessage({
+              kind: ReqKind.PrioritizeTile,
+              id: puzzleId,
+              tile,
+            });
+          }}
           handleSelectTile={(tile: number) => {
             if (!puzzleWorker) throw new Error("Worker not ready");
             if (puzzleId === null) throw new Error("Puzzle id not initialized");

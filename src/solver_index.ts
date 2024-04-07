@@ -1,6 +1,6 @@
 import { render, h } from "preact";
 import { Solver } from "./components/Solver.js";
-import { ReqKind, PerfTestReq, genMsgId } from "./util/worker.js";
+import { ReqKind, PerfTestReq, genPuzzleId } from "./util/worker.js";
 
 render(h(Solver, null, null), document.querySelector("#game-area")!);
 
@@ -22,7 +22,7 @@ const setupWorker = (): void => {
 
   const msg: PerfTestReq = {
     kind: ReqKind.PerfTest,
-    id: genMsgId(),
+    id: genPuzzleId(),
     puzzleArgs: hardDifficulty,
     startingTile: 0,
     iterations: 2000,

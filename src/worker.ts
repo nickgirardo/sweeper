@@ -23,8 +23,6 @@ onmessage = (ev: MessageEvent<any>): void => {
     return;
   }
 
-  console.log("got message!");
-
   switch (data.kind) {
     case ReqKind.PerfTest:
       perfTest(data);
