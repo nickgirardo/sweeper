@@ -43,7 +43,7 @@ type AppState = SetupState | PreGameState | GameState | PostGameState;
 const state = signal<AppState>({ stage: Stage.Setup });
 
 export const App: FunctionComponent<{}> = () => {
-  const [genPuzzleWorker, setGenPuzzleWorker] = useState<Worker | null>(null);
+  const [puzzleWorker, setPuzzleWorker] = useState<Worker | null>(null);
 
   const [startTile, setStartTile] = useState<null | number>(null);
   const [foundGames, setFoundGames] = useState<Map<number, number>>(new Map());
@@ -71,11 +71,10 @@ export const App: FunctionComponent<{}> = () => {
         (prev) => new Map([...prev, [data.startingTile, data.seed]])
       );
     });
-    setGenPuzzleWorker(worker);
+    setPuzzleWorker(worker);
   }, []);
 
   useEffect(() => {
-    console.log(startTile, foundGames);
     if (startTile === null) return;
 
     const foundSeed = foundGames.get(startTile);
@@ -97,14 +96,23 @@ export const App: FunctionComponent<{}> = () => {
     case Stage.Setup:
       return (
         <Setup
-          completeSetup={(width, height, mineCount) =>
-            (state.value = {
+          completeSetup={(width, height, mineCount) => {
+            if (!puzzleWorker) throw new Error("Worker not ready");
+
+            puzzleWorker.postMessage({
+              kind: ReqKind.PreparePuzzle,
+              id: genMsgId(),
+              puzzleArgs: { width, height, mineCount },
+              startingSeed: performance.now(),
+            });
+
+            state.value = {
               stage: Stage.PreGame,
               width,
               height,
               mineCount,
-            })
-          }
+            };
+          }}
         />
       );
     case Stage.PreGame:
@@ -113,23 +121,15 @@ export const App: FunctionComponent<{}> = () => {
           width={state.value.width}
           height={state.value.height}
           handleSelectTile={(tile: number) => {
-            if (!genPuzzleWorker) throw new Error("");
+            if (!puzzleWorker) throw new Error("Worker not ready");
 
             // Don't allow changing the starting tile once it's chosen
             if (startTile !== null) return;
 
-            const st = state.value as PreGameState;
-
-            genPuzzleWorker.postMessage({
-              kind: ReqKind.GenPuzzle,
+            puzzleWorker.postMessage({
+              kind: ReqKind.TileChosen,
               id: genMsgId(),
-              puzzleArgs: {
-                width: st.width,
-                height: st.height,
-                mineCount: st.mineCount,
-                startingTile: tile,
-              },
-              startingSeed: performance.now(),
+              tile,
             });
 
             setStartTile(tile);

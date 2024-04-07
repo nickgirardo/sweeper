@@ -4,31 +4,58 @@ export type PuzzleArgs = {
   width: number;
   height: number;
   mineCount: number;
-  startingTile: number;
 };
 
 export enum ReqKind {
   PerfTest = "perf-test-req",
-  GenPuzzle = "gen-board-req",
+  PreparePuzzle = "prepare-board-req",
+  PrioritizeTile = "prioritize-tile-req",
+  TileChosen = "tile-chosen-req",
+  Abort = "abort-req",
 }
 
 export type PerfTestReq = {
   kind: ReqKind.PerfTest;
   id: MessageId;
   puzzleArgs: PuzzleArgs;
+  startingTile: number;
   iterations: number;
 };
 
-export type GenPuzzleReq = {
-  kind: ReqKind.GenPuzzle;
+export type PreparePuzzleReq = {
+  kind: ReqKind.PreparePuzzle;
   id: MessageId;
   puzzleArgs: PuzzleArgs;
   startingSeed: number;
 };
 
-export type SweepReq = PerfTestReq | GenPuzzleReq;
+export type PrioritizeTileReq = {
+  kind: ReqKind.PrioritizeTile;
+  id: MessageId;
+  tile: number;
+};
+
+export type TileChosenReq = {
+  kind: ReqKind.TileChosen;
+  id: MessageId;
+  tile: number;
+};
+
+export type AbortReq = {
+  kind: ReqKind.Abort;
+  id: MessageId;
+  tile: number;
+};
+
+export type SweepReq =
+  | PerfTestReq
+  | PreparePuzzleReq
+  | PrioritizeTileReq
+  | TileChosenReq
+  | AbortReq;
 
 export enum RespKind {
+  Test = "test",
   PerfTest = "perf-test-resp",
   GenPuzzle = "gen-board-resp",
 }
@@ -40,13 +67,14 @@ export type PerfTestResp = {
   solved: number;
 };
 
+// TODO rm debugging fields
 export type GenPuzzleResp = {
   kind: RespKind.GenPuzzle;
   id: MessageId;
   startingTile: number;
   seed: number;
-  elapsed: number;
-  skipped: number;
+  elapsed?: number;
+  skipped?: number;
 };
 
 export type SweepResp = PerfTestResp | GenPuzzleResp;

@@ -18,13 +18,13 @@ const setupWorker = (): void => {
     width: 30,
     height: 16,
     mineCount: 99,
-    startingTile: 0,
   };
 
   const msg: PerfTestReq = {
     kind: ReqKind.PerfTest,
     id: genMsgId(),
     puzzleArgs: hardDifficulty,
+    startingTile: 0,
     iterations: 2000,
   };
 
