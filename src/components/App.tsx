@@ -53,11 +53,9 @@ export const App: FunctionComponent<{}> = () => {
 
   const [puzzleId, setPuzzleId] = useState<null | PuzzleId>(null);
   const [startTile, setStartTile] = useState<null | number>(null);
-  const [foundGames, setFoundGames] = useState<Map<number, number>>(new Map());
 
-  useEffect(() => {
-    const worker = new Worker("dist/worker.js", { type: "module" });
-    worker.addEventListener("message", (ev) => {
+  const workerListener =
+    (puzzleId: PuzzleId) => (ev: MessageEvent<unknown>) => {
       const data = ev.data;
 
       if (!isSweepResp(data)) {
@@ -72,32 +70,28 @@ export const App: FunctionComponent<{}> = () => {
         return;
       }
 
-      console.log("response from worker", data);
+      if (data.id !== puzzleId) {
+        console.warn(
+          `Unexpected puzzleId in response, expected ${puzzleId}, received ${data.id}`
+        );
+        return;
+      }
+      const st = state.value as PreGameState;
 
-      setFoundGames(
-        (prev) => new Map([...prev, [data.startingTile, data.seed]])
-      );
-    });
-    setPuzzleWorker(worker);
-  }, []);
+      state.value = {
+        stage: Stage.Game,
+        width: st.width,
+        height: st.height,
+        mineCount: st.mineCount,
+        startingTile: data.startingTile,
+        seed: data.seed,
+      };
+    };
 
   useEffect(() => {
-    if (startTile === null) return;
-
-    const foundSeed = foundGames.get(startTile);
-    if (foundSeed === undefined) return;
-
-    const st = state.value as PreGameState;
-
-    state.value = {
-      stage: Stage.Game,
-      width: st.width,
-      height: st.height,
-      mineCount: st.mineCount,
-      startingTile: startTile,
-      seed: foundSeed,
-    };
-  }, [startTile, foundGames]);
+    const worker = new Worker("dist/worker.js", { type: "module" });
+    setPuzzleWorker(worker);
+  }, []);
 
   switch (state.value.stage) {
     case Stage.Setup:
@@ -107,6 +101,8 @@ export const App: FunctionComponent<{}> = () => {
             if (!puzzleWorker) throw new Error("Worker not ready");
 
             const id = genPuzzleId();
+
+            puzzleWorker.addEventListener("message", workerListener(id));
 
             puzzleWorker.postMessage({
               kind: ReqKind.PreparePuzzle,
