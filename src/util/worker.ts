@@ -1,4 +1,4 @@
-type MessageId = number;
+export type PuzzleId = number;
 
 export type PuzzleArgs = {
   width: number;
@@ -16,7 +16,7 @@ export enum ReqKind {
 
 export type PerfTestReq = {
   kind: ReqKind.PerfTest;
-  id: MessageId;
+  id: PuzzleId;
   puzzleArgs: PuzzleArgs;
   startingTile: number;
   iterations: number;
@@ -24,26 +24,26 @@ export type PerfTestReq = {
 
 export type PreparePuzzleReq = {
   kind: ReqKind.PreparePuzzle;
-  id: MessageId;
+  id: PuzzleId;
   puzzleArgs: PuzzleArgs;
   startingSeed: number;
 };
 
 export type PrioritizeTileReq = {
   kind: ReqKind.PrioritizeTile;
-  id: MessageId;
+  id: PuzzleId;
   tile: number;
 };
 
 export type TileChosenReq = {
   kind: ReqKind.TileChosen;
-  id: MessageId;
+  id: PuzzleId;
   tile: number;
 };
 
 export type AbortReq = {
   kind: ReqKind.Abort;
-  id: MessageId;
+  id: PuzzleId;
   tile: number;
 };
 
@@ -62,7 +62,7 @@ export enum RespKind {
 
 export type PerfTestResp = {
   kind: RespKind.PerfTest;
-  id: MessageId;
+  id: PuzzleId;
   timeElapsed: number;
   solved: number;
 };
@@ -70,7 +70,7 @@ export type PerfTestResp = {
 // TODO rm debugging fields
 export type GenPuzzleResp = {
   kind: RespKind.GenPuzzle;
-  id: MessageId;
+  id: PuzzleId;
   startingTile: number;
   seed: number;
   elapsed?: number;
@@ -80,7 +80,7 @@ export type GenPuzzleResp = {
 export type SweepResp = PerfTestResp | GenPuzzleResp;
 
 // Might want something a bit more sophisticated here lol
-export const genMsgId: () => MessageId = Math.random;
+export const genPuzzleId: () => PuzzleId = Math.random;
 
 export const isSweepReq = (data: any): data is SweepReq =>
   data.kind && Object.values(ReqKind).includes(data.kind as ReqKind);

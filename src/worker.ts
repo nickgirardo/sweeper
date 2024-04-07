@@ -12,6 +12,7 @@ import {
   AbortReq,
   TileChosenReq,
   PrioritizeTileReq,
+  PuzzleId,
 } from "./util/worker.js";
 
 onmessage = (ev: MessageEvent<any>): void => {
@@ -49,7 +50,9 @@ class SweepWorker {
   workQueue: Array<number> = [];
   processed: Set<number> = new Set();
   running: boolean = false;
-  id: number;
+
+  // TODO don't keep this
+  id: PuzzleId;
 
   // puzzle settings
   width: number;
@@ -128,16 +131,18 @@ class SweepWorker {
 
 // TODO instead of a single global worker, have series of workers per puzzle
 // and deallocate workers in abort msg
-let sweepWorker: SweepWorker;
+let workers: Map<PuzzleId, SweepWorker> = new Map();
 
 const preparePuzzle = (req: PreparePuzzleReq) => {
-  sweepWorker = new SweepWorker(
+  const sweepWorker = new SweepWorker(
     req.id,
     req.puzzleArgs.width,
     req.puzzleArgs.height,
     req.puzzleArgs.mineCount,
     req.startingSeed
   );
+
+  workers.set(req.id, sweepWorker);
 
   sweepWorker.workQueue = [
     ...new Array(req.puzzleArgs.width * req.puzzleArgs.height).keys(),
@@ -147,8 +152,9 @@ const preparePuzzle = (req: PreparePuzzleReq) => {
 };
 
 const prioritizeTile = (req: PrioritizeTileReq) => {
+  const sweepWorker = workers.get(req.id);
   if (sweepWorker === undefined) {
-    console.error("Please initialize the worker first");
+    console.error(`Worker with id "${req.id}" not found!`);
     return;
   }
 
@@ -165,8 +171,9 @@ const prioritizeTile = (req: PrioritizeTileReq) => {
 };
 
 const tileChosen = (req: TileChosenReq) => {
+  const sweepWorker = workers.get(req.id);
   if (sweepWorker === undefined) {
-    console.error("Please initialize the worker first");
+    console.error(`Worker with id "${req.id}" not found!`);
     return;
   }
 
@@ -174,13 +181,16 @@ const tileChosen = (req: TileChosenReq) => {
   sweepWorker.exec();
 };
 
-const abortPuzzleSolve = (_req: AbortReq) => {
+const abortPuzzleSolve = (req: AbortReq) => {
+  const sweepWorker = workers.get(req.id);
   if (sweepWorker === undefined) {
-    console.error("Please initialize the worker first");
+    console.error(`Worker with id "${req.id}" not found!`);
     return;
   }
 
   sweepWorker.workQueue = [];
+
+  workers.delete(req.id);
 };
 
 const perfTest = (req: PerfTestReq) => {

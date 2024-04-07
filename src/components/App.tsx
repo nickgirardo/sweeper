@@ -5,7 +5,13 @@ import { Setup } from "./Setup.js";
 import { Grid } from "./Grid.js";
 import { PregameGrid } from "./PregameGrid.js";
 import { useEffect, useState } from "preact/hooks";
-import { ReqKind, RespKind, genMsgId, isSweepResp } from "../util/worker.js";
+import {
+  PuzzleId,
+  ReqKind,
+  RespKind,
+  genPuzzleId,
+  isSweepResp,
+} from "../util/worker.js";
 
 enum Stage {
   Setup = "setup",
@@ -45,6 +51,7 @@ const state = signal<AppState>({ stage: Stage.Setup });
 export const App: FunctionComponent<{}> = () => {
   const [puzzleWorker, setPuzzleWorker] = useState<Worker | null>(null);
 
+  const [puzzleId, setPuzzleId] = useState<null | PuzzleId>(null);
   const [startTile, setStartTile] = useState<null | number>(null);
   const [foundGames, setFoundGames] = useState<Map<number, number>>(new Map());
 
@@ -99,12 +106,16 @@ export const App: FunctionComponent<{}> = () => {
           completeSetup={(width, height, mineCount) => {
             if (!puzzleWorker) throw new Error("Worker not ready");
 
+            const id = genPuzzleId();
+
             puzzleWorker.postMessage({
               kind: ReqKind.PreparePuzzle,
-              id: genMsgId(),
+              id,
               puzzleArgs: { width, height, mineCount },
               startingSeed: performance.now(),
             });
+
+            setPuzzleId(id);
 
             state.value = {
               stage: Stage.PreGame,
@@ -122,13 +133,14 @@ export const App: FunctionComponent<{}> = () => {
           height={state.value.height}
           handleSelectTile={(tile: number) => {
             if (!puzzleWorker) throw new Error("Worker not ready");
+            if (puzzleId === null) throw new Error("Puzzle id not initialized");
 
             // Don't allow changing the starting tile once it's chosen
             if (startTile !== null) return;
 
             puzzleWorker.postMessage({
               kind: ReqKind.TileChosen,
-              id: genMsgId(),
+              id: puzzleId,
               tile,
             });
 
