@@ -45,6 +45,7 @@ onmessage = (ev: MessageEvent<any>): void => {
 };
 
 class SweepWorker {
+  #channel = new MessageChannel();
   workQueue: Array<number> = [];
   running: boolean = false;
   // Map from starting tile to valid seed
@@ -72,6 +73,8 @@ class SweepWorker {
     this.height = height;
     this.mineCount = mineCount;
     this.startingSeed = startingSeed;
+
+    this.#channel.port1.onmessage = () => this.work();
   }
 
   stop() {
@@ -85,10 +88,12 @@ class SweepWorker {
 
     this.running = true;
 
-    // TODO remove for better browser support
-    // Queuing a task (not microtask) is necessary here so that we're interrupted by incoming messages
-    //@ts-ignore
-    scheduler.postTask(() => this.work());
+    this.runWork();
+  }
+
+  // Queuing a task (not a microtask) is necessary here so that we're interrupted by incoming messages
+  runWork() {
+    this.#channel.port2.postMessage("");
   }
 
   // Do the actual work
@@ -135,8 +140,7 @@ class SweepWorker {
 
     this.solvePuzzle(startingTile);
 
-    //@ts-ignore
-    scheduler.postTask(() => this.work());
+    this.runWork();
   }
 
   solvePuzzle(startingTile: number) {
