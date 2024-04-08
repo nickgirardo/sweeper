@@ -1,8 +1,4 @@
-// NOTE explicit import as workers don't support importmaps
-import {
-  satSolve,
-  satSolveLearnClauses,
-} from "/node_modules/boolean-sat/boolean-sat.js";
+import satSolve from "boolean-sat";
 
 import { CheckResult } from "./index.js";
 import { Puzzle } from "../puzzle.js";
@@ -64,16 +60,15 @@ export const borderSatSolver = (puzzle: Puzzle): CheckResult | false => {
 
   const [initialClauses, translator] = boundryClauses(puzzle);
 
-  const satResult = satSolveLearnClauses(translator.size, initialClauses);
+  const initialSolution = satSolve(translator.size, initialClauses);
 
-  if (!satResult) return false;
-
-  const [initialSolution, learnedClauses] = satResult;
+  if (!initialSolution) return false;
 
   const safeToCheck: Array<number> = [];
   const safeToFlag: Array<number> = [];
 
   for (let i = 1; i < initialSolution.length; i++) {
+    let learnedClauses: Array<Clause> = [];
     const contradictoryLiteral = initialSolution[i] ? -i : i;
     const contradictoryClause = [contradictoryLiteral];
 

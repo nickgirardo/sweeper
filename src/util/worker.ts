@@ -1,3 +1,10 @@
+export const workerInstance = new Worker(
+  new URL("../worker", import.meta.url),
+  {
+    type: "module",
+  }
+);
+
 export type PuzzleId = number;
 
 export type PuzzleArgs = {

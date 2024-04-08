@@ -13,3 +13,6 @@ yarn-error.log*
 *.tsbuildinfo
 .npm
 .eslintcache
+
+# Nix output
+result

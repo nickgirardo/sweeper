@@ -4,8 +4,9 @@ import { signal } from "@preact/signals";
 import { Setup } from "./Setup.js";
 import { Grid } from "./Grid.js";
 import { PregameGrid } from "./PregameGrid.js";
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import {
+  workerInstance,
   PuzzleId,
   ReqKind,
   RespKind,
@@ -49,7 +50,7 @@ type AppState = SetupState | PreGameState | GameState | PostGameState;
 const state = signal<AppState>({ stage: Stage.Setup });
 
 export const App: FunctionComponent<{}> = () => {
-  const [puzzleWorker, setPuzzleWorker] = useState<Worker | null>(null);
+  const puzzleWorker = workerInstance;
 
   const [puzzleId, setPuzzleId] = useState<null | PuzzleId>(null);
   const [startTile, setStartTile] = useState<null | number>(null);
@@ -87,11 +88,6 @@ export const App: FunctionComponent<{}> = () => {
         seed: data.seed,
       };
     };
-
-  useEffect(() => {
-    const worker = new Worker("dist/worker.js", { type: "module" });
-    setPuzzleWorker(worker);
-  }, []);
 
   switch (state.value.stage) {
     case Stage.Setup:

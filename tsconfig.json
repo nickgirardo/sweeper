@@ -3,7 +3,6 @@
     "target": "ES2022",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "nodenext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
 
@@ -13,8 +12,12 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "allowSyntheticDefaultImports": true,
-
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
