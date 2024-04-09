@@ -25,7 +25,7 @@
       packages = forAllSystems ({ pkgs, ... }: rec {
         default = sweep;
         sweep = pkgs.buildNpmPackage {
-          name = "trone";
+          name = "sweep";
           src = gitignore.lib.gitignoreSource ./.;
           npmDepsHash = "sha256-uheGLVwBrg1aRltEG0J5od9Zlev3Q8HVWDm6KeZYmpk=";
           installPhase = ''
