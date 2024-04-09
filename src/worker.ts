@@ -1,5 +1,5 @@
 import { solveBoard } from "./solver/index.js";
-import { Puzzle } from "./puzzle.js";
+import { Puzzle, Quadrant } from "./puzzle.js";
 import { Rand, assertNever, range } from "./util/index.js";
 import {
   ReqKind,
@@ -48,8 +48,8 @@ class SweepWorker {
   #channel = new MessageChannel();
   workQueue: Array<number> = [];
   running: boolean = false;
-  // Map from starting tile to valid seed
-  processed: Map<number, number> = new Map();
+  // Map from starting tile to valid seed and quadrant
+  processed: Map<number, [number, Quadrant]> = new Map();
   // If set, return the puzzle by starting tile when possible
   returnPuzzle: number | null = null;
 
@@ -119,9 +119,9 @@ class SweepWorker {
         id: this.id,
         startingTile: this.returnPuzzle,
         // NOTE asserting here as we've checked with `has` above
-        seed: this.processed.get(this.returnPuzzle)!,
+        seed: this.processed.get(this.returnPuzzle)![0],
         // TODO transforms
-        transforms: undefined,
+        quadrant: Quadrant.TL,
       };
 
       postMessage(resp);
@@ -152,13 +152,16 @@ class SweepWorker {
         this.height,
         this.mineCount,
         startingTile,
-        new Rand(seed)
+        new Rand(seed),
+        // TODO
+        Quadrant.TL
       );
 
       const solution = solveBoard(puzzle);
 
       if (solution.solves && puzzle.checkSolution(solution)) {
-        this.processed.set(startingTile, seed);
+        // TODO
+        this.processed.set(startingTile, [seed, Quadrant.TL]);
 
         return;
       }
@@ -243,7 +246,8 @@ const perfTest = (req: PerfTestReq) => {
       height,
       mineCount,
       startingTile,
-      new Rand(seed)
+      new Rand(seed),
+      Quadrant.TL
     );
 
     const solution = solveBoard(puzzle);

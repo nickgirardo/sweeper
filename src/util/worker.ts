@@ -1,3 +1,5 @@
+import { Quadrant } from "../puzzle";
+
 export const workerInstance = new Worker(
   new URL("../worker", import.meta.url),
   {
@@ -80,8 +82,7 @@ export type GenPuzzleResp = {
   id: PuzzleId;
   startingTile: number;
   seed: number;
-  // TODO transforms
-  transforms: undefined;
+  quadrant: Quadrant;
 };
 
 export type SweepResp = PerfTestResp | GenPuzzleResp;

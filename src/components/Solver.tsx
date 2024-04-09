@@ -5,7 +5,7 @@ import { useMemo } from "preact/hooks";
 
 import { solveBoard, Solver as SolverUsed } from "../solver/index.js";
 import { Rand } from "../util/index.js";
-import { Puzzle } from "../puzzle.js";
+import { Puzzle, Quadrant } from "../puzzle.js";
 
 import { DisplayGrid } from "./DisplayGrid.js";
 import { Bitset } from "../util/bitset.js";
@@ -38,14 +38,16 @@ export const Solver: FunctionComponent<{}> = () => {
         height.value,
         mineCount.value,
         startingTile,
-        new Rand(seed.value)
+        new Rand(seed.value),
+        Quadrant.TL
       ),
       new Puzzle(
         width.value,
         height.value,
         mineCount.value,
         startingTile,
-        new Rand(seed.value)
+        new Rand(seed.value),
+        Quadrant.TL
       ),
     ],
     [seed.value, width.value, height.value, mineCount.value]

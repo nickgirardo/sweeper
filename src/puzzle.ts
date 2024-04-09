@@ -2,6 +2,13 @@ import { Solution } from "./solver/index.js";
 import { Bitset } from "./util/bitset.js";
 import { Rand, range } from "./util/index.js";
 
+export enum Quadrant {
+  TL,
+  TR,
+  BL,
+  BR,
+}
+
 export interface PuzzleState {
   checked: Bitset;
   flagged: Bitset;
@@ -20,6 +27,7 @@ export class Puzzle {
 
   readonly startingTile: number;
   readonly seed: number;
+  readonly quadrant: Quadrant;
 
   neighboringCells: Array<Array<number>>;
   boundryCells: Array<number>;
@@ -29,7 +37,8 @@ export class Puzzle {
     height: number,
     mineCount: number,
     startingTile: number,
-    rand: Rand
+    rand: Rand,
+    quadrant: Quadrant
   ) {
     const totalCells = width * height;
 
@@ -42,6 +51,7 @@ export class Puzzle {
 
     this.startingTile = startingTile;
     this.seed = rand.seed;
+    this.quadrant = quadrant;
 
     this.flagged = new Bitset(totalCells);
     this.checked = new Bitset(totalCells);
@@ -53,9 +63,35 @@ export class Puzzle {
 
     const freeTiles = [startingTile, ...this.neighboringCells[startingTile]];
 
+    const randomLocation = (): number => {
+      const quadrantTransform = (x: number, y: number): number => {
+        switch (quadrant) {
+          case Quadrant.TL:
+            break;
+          case Quadrant.TR:
+            x = width - 1 - x;
+            break;
+          case Quadrant.BL:
+            y = height - 1 - y;
+            break;
+          case Quadrant.BR:
+            x = width - 1 - x;
+            y = height - 1 - y;
+            break;
+        }
+
+        return x + y * width;
+      };
+
+      const x = Math.floor(rand.next() * width);
+      const y = Math.floor(rand.next() * height);
+
+      return quadrantTransform(x, y);
+    };
+
     // Set mines
     while (this.mines.length < mineCount) {
-      const location = Math.floor(rand.next() * totalCells);
+      const location = randomLocation();
       if (!freeTiles.includes(location) && !this.mines.includes(location))
         this.mines.push(location);
     }
@@ -76,7 +112,8 @@ export class Puzzle {
       this.height,
       this.mineCount,
       this.startingTile,
-      new Rand(this.seed)
+      new Rand(this.seed),
+      this.quadrant
     );
 
     p.updateCheckedAndFlagged(

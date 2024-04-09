@@ -93,7 +93,8 @@ export const App: FunctionComponent<{}> = () => {
             st.height,
             st.mineCount,
             data.startingTile,
-            new Rand(data.seed)
+            new Rand(data.seed),
+            data.quadrant
           )
         ),
       };
