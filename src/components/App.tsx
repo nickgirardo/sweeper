@@ -1,5 +1,5 @@
 import { FunctionComponent } from "preact";
-import { signal } from "@preact/signals";
+import { Signal, signal } from "@preact/signals";
 
 import { Setup } from "./Setup.js";
 import { Grid } from "./Grid.js";
@@ -13,6 +13,8 @@ import {
   genPuzzleId,
   isSweepResp,
 } from "../util/worker.js";
+import { Puzzle } from "../puzzle.js";
+import { Rand } from "../util/index.js";
 
 enum Stage {
   Setup = "setup",
@@ -38,7 +40,7 @@ type GameState = {
   height: number;
   mineCount: number;
   startingTile: number;
-  seed: number;
+  puzzle: Signal<Puzzle>;
 };
 
 type PostGameState = {
@@ -85,7 +87,15 @@ export const App: FunctionComponent<{}> = () => {
         height: st.height,
         mineCount: st.mineCount,
         startingTile: data.startingTile,
-        seed: data.seed,
+        puzzle: signal(
+          new Puzzle(
+            st.width,
+            st.height,
+            st.mineCount,
+            data.startingTile,
+            new Rand(data.seed)
+          )
+        ),
       };
     };
 
@@ -159,7 +169,7 @@ export const App: FunctionComponent<{}> = () => {
           height={(state.value as GameState).height}
           mineCount={(state.value as GameState).mineCount}
           startingTile={(state.value as GameState).startingTile}
-          seed={(state.value as GameState).seed}
+          puzzle={(state.value as GameState).puzzle}
         />
       );
     case Stage.PostGame:

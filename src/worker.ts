@@ -120,6 +120,8 @@ class SweepWorker {
         startingTile: this.returnPuzzle,
         // NOTE asserting here as we've checked with `has` above
         seed: this.processed.get(this.returnPuzzle)!,
+        // TODO transforms
+        transforms: undefined,
       };
 
       postMessage(resp);

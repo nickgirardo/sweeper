@@ -80,8 +80,8 @@ export type GenPuzzleResp = {
   id: PuzzleId;
   startingTile: number;
   seed: number;
-  elapsed?: number;
-  skipped?: number;
+  // TODO transforms
+  transforms: undefined;
 };
 
 export type SweepResp = PerfTestResp | GenPuzzleResp;

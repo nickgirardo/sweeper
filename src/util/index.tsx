@@ -9,11 +9,15 @@ export const assertNever = <T,>(x: never): T => {
 
 // Wichman-Hill PRNG
 export class Rand {
+  seed: number;
+
   x: number;
   y: number;
   z: number;
 
   constructor(seed: number) {
+    this.seed = seed;
+
     this.x = (171 * seed) % 30269;
     this.y = (172 * (seed + 1)) % 30307;
     this.z = (170 * (seed + 2)) % 30323;

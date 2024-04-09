@@ -18,6 +18,9 @@ export class Puzzle {
   readonly checked: Bitset;
   readonly checkedButNotFlagged: Bitset;
 
+  readonly startingTile: number;
+  readonly seed: number;
+
   neighboringCells: Array<Array<number>>;
   boundryCells: Array<number>;
 
@@ -36,6 +39,9 @@ export class Puzzle {
     this.mines = [];
     this.neighbors = new Array(totalCells).fill(0);
     this.boundryCells = new Array();
+
+    this.startingTile = startingTile;
+    this.seed = rand.seed;
 
     this.flagged = new Bitset(totalCells);
     this.checked = new Bitset(totalCells);
@@ -64,6 +70,23 @@ export class Puzzle {
     this.checkTile(startingTile);
   }
 
+  clone(): Puzzle {
+    const p = new Puzzle(
+      this.width,
+      this.height,
+      this.mineCount,
+      this.startingTile,
+      new Rand(this.seed)
+    );
+
+    p.updateCheckedAndFlagged(
+      this.checked.getSetIndicies(),
+      this.flagged.getSetIndicies()
+    );
+
+    return p;
+  }
+
   dumpState(): PuzzleState {
     return {
       checked: this.checked.clone(),
@@ -72,6 +95,15 @@ export class Puzzle {
   }
 
   isSolved = (): boolean => this.checked.setCount === this.width * this.height;
+
+  updateCheckedAndFlagged(
+    checked: Array<number>,
+    flagged: Array<number>
+  ): void {
+    for (const t of checked) this.checked.set(t);
+    for (const t of flagged) this.flagged.set(t);
+    this.#updateBoundryCacheFull();
+  }
 
   updatePuzzle(safeToCheck: Array<number>, safeToFlag: Array<number>): void {
     const beforeSize = this.checked.setCount;
